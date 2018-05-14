@@ -1,0 +1,38 @@
+{
+  "name": "ts-serializer",
+  "version": "0.1.0",
+  "description": "A simple typescript serialization library.",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index",
+    "test": "mocha -r ts-node/register ./**/*.spec.ts",
+    "lint": "./node_modules/.bin/tslint --project tsconfig.json",
+    "build": "tsc",
+    "postinstall": "postinstall-build dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seidel-Michael/ts-serializer.git"
+  },
+  "author": "Balluff GmbH - Michael Seidel",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Seidel-Michael/ts-serializer/issues"
+  },
+  "homepage": "https://github.com/Seidel-Michael/ts-serializer#readme",
+  "dependencies": {
+    "postinstall-build": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.3",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/mocha": "^5.2.0",
+    "@types/node": "^9.6.6",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^5.1.1",
+    "ts-node": "^6.0.1",
+    "tslint": "^5.9.1",
+    "typescript": "^2.8.3"
+  }
+}
