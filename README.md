@@ -2,7 +2,6 @@
 A simple typescript serialization library.
 
 # ToDos
-- Serialization
 - Write Readme
 
 # Issues to consider
