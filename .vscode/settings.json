@@ -6,9 +6,11 @@
         "deserialize",
         "deserialized",
         "deserializes",
+        "memberof",
         "nonserialized",
         "seidel",
         "serializable",
-        "serializer"
+        "serializer",
+        "stringify"
     ]
 }
