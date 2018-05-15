@@ -7,6 +7,13 @@ The library only works with simple types like number and string.
 
 # Usage
 
+## Enable experimental Decorators
+You have to enable experimental Decorators in your `tsconfig.json` file.
+
+```ts
+"experimentalDecorators": true
+```
+
 ## The Serializable interface
 To enable serialization for a type it has to implement the Serializable interface.
 
