@@ -196,29 +196,34 @@ export class Serializer {
   static serialize<T extends Serializable>(object: any): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
       // Init empty array
-      if (!object['_serializable_nonserialized']) {
-        object['_serializable_nonserialized'] = [];
-      }
-
-      if (!object['_serializable_complextype']) {
-        object['_serializable_complextype'] = new Map();
-      }
+      this.initEmptyArrays(object);
 
       const serializedData: any = {};
+
+      const openPromises = [];
 
       // Iterate properties
       for (const property in object) {
         if (!object['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_')) {
-          serializedData[property] = object[property];
+          const isArray = object['_serializable_array'].includes(property);
 
-          if (!object['_serializable_complextype'].get(property)) {
-            serializedData[property] = object[property];
-          } else {
-            serializedData[property] = await this.serialize(object[property]);
-          }
+          // Crate Dummy array
+          const data = isArray ? object[property] : [object[property]];
+          serializedData[property] = isArray ? [] : undefined;
+
+          data.forEach(element => {
+            if (object['_serializable_complextype'].get(property) || object['_serializable_abstracttype'].get(property)) {
+              openPromises.push(this.serialize(element).then((obj) => {
+                isArray ? serializedData[property].push(obj) : serializedData[property] = obj;
+              }));
+            } else {
+              isArray ? serializedData[property].push(element) : serializedData[property] = element;
+            }
+          });
         }
       }
 
+      await Promise.all(openPromises).catch(reject);
       resolve(serializedData);
     });
   }

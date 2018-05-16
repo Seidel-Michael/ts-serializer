@@ -49,11 +49,11 @@ class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
 }
 
 class TestClassArrayNoMandatoryNoExclude implements Serializable {
-  abstractTypeArray: [any];
+  abstractTypeArray: any[];
 
-  complexTypeArray: [TestClassNoMandatoryNoExclude];
+  complexTypeArray: TestClassNoMandatoryNoExclude[];
 
-  simpleArray: [string];
+  simpleArray: string[];
 
   constructor() {
     TestClassArrayNoMandatoryNoExclude.prototype['_serializable_typeimplementation'] = new Map().set('testType', TestClassNoMandatoryNoExclude);
@@ -335,6 +335,36 @@ describe('Serializer', () => {
 
       return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
           .to.eventually.deep.equal({test: 'IAmATest', complex: {test: 'IAmATestToo', mandatoryProperty: 'IAmJustAnotherTest'}});
+    });
+
+    it('should resolve with valid serialized abstract object - exclude', () => {
+      const object = new TestClassAbstractTypeNoMandatoryNoExclude();
+      object.test = 'IAmATest';
+      object.abstractType = new TestClassNoMandatoryExclude();
+      object.abstractType.excludedProperty = 'ExcludeMe';
+      object.abstractType.test = 'IAmATestToo';
+      object.abstractType.typeDef = 'IAmTheType';
+
+      return expect(Serializer.serialize<TestClassAbstractTypeNoMandatoryNoExclude>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', abstractType: {test: 'IAmATestToo', typeDef: 'IAmTheType'}});
+    });
+
+    it('should resolve with valid serialized array object - exclude', () => {
+      const object = new TestClassArrayNoMandatoryNoExclude();
+      object.simpleArray = ['a', 'b'];
+
+      const complex1 = new TestClassNoMandatoryExclude();
+      complex1.excludedProperty = 'eA';
+      complex1.test = 'A';
+      const complex2 = new TestClassNoMandatoryExclude();
+      complex2.excludedProperty = 'eB';
+      complex2.test = 'B';
+      object.complexTypeArray = [complex1, complex2];
+      object.abstractTypeArray = [complex1, complex2];
+
+      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
+          .to.eventually.deep.equal(
+              {simpleArray: ['a', 'b'], complexTypeArray: [{test: 'A'}, {test: 'B'}], abstractTypeArray: [{test: 'A'}, {test: 'B'}]});
     });
   });
 
