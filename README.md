@@ -54,8 +54,12 @@ You can add implementations of an abstract type to the class metadata. This has 
 The given type hast to be serializable itself.
 
 ### The AbstractType decorator
-You can mark a property as an abstract type for serialization. If marked the serializer will look up the given type property amd
+You can mark a property as an abstract type for serialization and deserialization. If marked the serializer will look up the given type property amd
 tries to find the implementation information of the AddTypeImplementation decorator.
+
+### The ArrayType decorator
+You can mark a property as an array type for serialization and deserialization. If marked the serializer will serialze and deserialize ComplexType and AbstractType arrays if combined with the AbstractType or ComplexType decorator.
+You don't have to st the ArrayType decorator for simple type arrays.
 
 ### Example
 ```ts
@@ -73,6 +77,10 @@ class TestClass implements Serializable {
   @Mandatory
   @ComplexType(MyComplexObject)
   testComplex: MyComplexObject
+
+  @ArrayType
+  @ComplexType(MyComplexObject)
+  testComplex: [MyComplexObject]
 
   @AbstractType('type')
   testAbstract: IMyType
@@ -265,3 +273,4 @@ Serializer.serializeFile<TestClass>(test, 'test.json').then(() => { console.log(
 - It is possible to deserialize a string to a number type.
 - It is possible to provide a different object as T in the serialize method.
 - It is possible to serialize an abstract type without the type information.
+- It is possible to serialize a property marked as an array that isn't one.

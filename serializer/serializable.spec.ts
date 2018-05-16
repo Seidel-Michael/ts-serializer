@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 
-import {Mandatory, NonSerialized, ComplexType, AddTypeImplementation, AbstractType} from './serializable';
+import {Mandatory, NonSerialized, ComplexType, AddTypeImplementation, AbstractType, ArrayType} from './serializable';
 
 describe('Serializable decorators', () => {
   describe('Mandatory', () => {
@@ -20,6 +20,26 @@ describe('Serializable decorators', () => {
 
       expect(target['_serializable_mandatory']).to.contain('abc');
       expect(target['_serializable_mandatory']).to.contain('cde');
+    });
+  });
+
+  describe('ArrayType', () => {
+    it('should create _serializable_array create on target object with key as first item on first call.', () => {
+      const target = {};
+
+      ArrayType(target, 'abc');
+
+      expect(target['_serializable_array']).to.contain('abc');
+    });
+
+    it('should add key to _serializable_array array on target object on second call.', () => {
+      const target = {};
+
+      ArrayType(target, 'abc');
+      ArrayType(target, 'cde');
+
+      expect(target['_serializable_array']).to.contain('abc');
+      expect(target['_serializable_array']).to.contain('cde');
     });
   });
 

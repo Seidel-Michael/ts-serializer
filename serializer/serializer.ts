@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 
 import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
-import {SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
+import {SerializedDataIsNotAnArrayError, SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
 import {Serializable} from './serializable';
 
 /**
@@ -29,6 +29,10 @@ export class Serializer {
       object['_serializable_nonserialized'] = [];
     }
 
+    if (!object['_serializable_array']) {
+      object['_serializable_array'] = [];
+    }
+
     if (!object['_serializable_complextype']) {
       object['_serializable_complextype'] = new Map();
     }
@@ -40,6 +44,37 @@ export class Serializer {
     if (!object['_serializable_typeimplementation']) {
       object['_serializable_typeimplementation'] = new Map();
     }
+  }
+
+  /**
+   * Gets an instance of an abstract type.
+   *
+   * @private
+   * @static
+   * @param {*} serializedData The serialized input data.
+   * @param {*} property The name of the serialized property.
+   * @param {*} newObject The new object instance.
+   * @returns {Promise<any>}
+   * @memberof Serializer
+   */
+  private static async getAbstractType(serializedData: any, property: any, newObject: any): Promise<any> {
+    return new Promise<any>(async (resolve, reject) => {
+      const typeName = serializedData[newObject['_serializable_abstracttype'].get(property)];
+
+      if (!typeName) {
+        reject(new SerializedObjectIncompleteError('abstract', serializedData, newObject['_serializable_abstracttype'].get(property)));
+        return;
+      }
+
+      const typeDefinition = newObject['_serializable_typeimplementation'].get(typeName);
+
+      if (!typeDefinition) {
+        reject(new UnknownTypeDefinitionError(typeName, serializedData));
+        return;
+      }
+
+      this.deserialize(typeDefinition, serializedData).then(resolve).catch(reject);
+    });
   }
 
   /**
@@ -70,46 +105,44 @@ export class Serializer {
         }
       });
 
+      const openPromises = [];
+
       // Assign values
       for (const property in serializedData) {
         if (!newObject['_serializable_nonserialized'].includes(property)) {
-          if (newObject['_serializable_complextype'].get(property)) {
-            try {
-              newObject[property] = await this.deserialize(newObject['_serializable_complextype'].get(property), serializedData[property]);
-            } catch (err) {
-              reject(err);
+          let data = serializedData[property];
+          const isArray = newObject['_serializable_array'].includes(property);
+
+          if (isArray) {
+            if (!Array.isArray(serializedData[property])) {
+              reject(new SerializedDataIsNotAnArrayError(property, serializedData));
               return;
             }
-          } else if (newObject['_serializable_abstracttype'].get(property)) {
-            const typeName = serializedData[property][newObject['_serializable_abstracttype'].get(property)];
-
-            if (!typeName) {
-              reject(
-                  new SerializedObjectIncompleteError('abstract', serializedData[property], newObject['_serializable_abstracttype'].get(property)));
-              return;
-            }
-
-            const typeDefinition = newObject['_serializable_typeimplementation'].get(typeName);
-
-            if (!typeDefinition) {
-              reject(new UnknownTypeDefinitionError(typeName, serializedData[property]));
-              return;
-            }
-
-            try {
-              newObject[property] = await this.deserialize(typeDefinition, serializedData[property]);
-            } catch (err) {
-              reject(err);
-              return;
-            }
+            newObject[property] = [];
           } else {
-            newObject[property] = serializedData[property];
+            // Create a dummy array.
+            data = [serializedData[property]];
           }
+
+          data.forEach(element => {
+            if (newObject['_serializable_complextype'].get(property)) {
+              console.log(newObject['_serializable_complextype'].get(property));
+              openPromises.push(this.deserialize(newObject['_serializable_complextype'].get(property), element).then((obj) => {
+                isArray ? newObject[property].push(obj) : newObject[property] = obj;
+              }));
+            } else if (newObject['_serializable_abstracttype'].get(property)) {
+              openPromises.push(this.getAbstractType(element, property, newObject).then((obj) => {
+                isArray ? newObject[property].push(obj) : newObject[property] = obj;
+              }));
+            } else {
+              isArray ? newObject[property].push(element) : newObject[property] = element;
+            }
+          });
         }
       }
 
+      await Promise.all(openPromises).catch(reject);
       resolve(newObject);
-
     });
   }
 

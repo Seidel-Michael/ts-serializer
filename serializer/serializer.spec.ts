@@ -8,7 +8,7 @@ import * as mockFS from 'mock-fs';
 import * as sinon from 'sinon';
 
 import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
-import {SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
+import {SerializedDataIsNotAnArrayError, SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
 import {Serializable} from './serializable';
 import {Serializer} from './serializer';
 
@@ -48,6 +48,21 @@ class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
   }
 }
 
+class TestClassArrayNoMandatoryNoExclude implements Serializable {
+  abstractTypeArray: [any];
+
+  complexTypeArray: [TestClassNoMandatoryNoExclude];
+
+  simpleArray: [string];
+
+  constructor() {
+    TestClassArrayNoMandatoryNoExclude.prototype['_serializable_typeimplementation'] = new Map().set('testType', TestClassNoMandatoryNoExclude);
+    TestClassArrayNoMandatoryNoExclude.prototype['_serializable_typeimplementation'].set('testTypeB', TestClassNoMandatoryExclude);
+    this['_serializable_abstracttype'] = new Map().set('abstractTypeArray', 'typeDef');
+    this['_serializable_complextype'] = new Map().set('complexTypeArray', TestClassNoMandatoryExclude);
+    this['_serializable_array'] = ['abstractTypeArray', 'complexTypeArray', 'simpleArray'];
+  }
+}
 
 class TestClassNoMandatoryNoExcludeComplex implements Serializable {
   test: string;
@@ -185,6 +200,59 @@ describe('Serializer', () => {
       expect(result.abstractType).to.be.instanceof(TestClassMandatoryNoExclude);
       expect(result.abstractType.mandatoryProperty).to.equal('IAmThere');
     });
+
+    it('should reject with SerializedDataIsNotAnArrayError if complex array type is not an array', () => {
+      const testData = {complexTypeArray: 'abc'};
+
+      return expect(Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedDataIsNotAnArrayError);
+    });
+
+    it('should reject with SerializedDataIsNotAnArrayError if abstract array type is not an array', () => {
+      const testData = {abstractTypeArray: 'abc'};
+
+      return expect(Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedDataIsNotAnArrayError);
+    });
+
+    it('should reject with SerializedDataIsNotAnArrayError if simple array type is not an array', () => {
+      const testData = {simpleArray: 'abc'};
+
+      return expect(Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedDataIsNotAnArrayError);
+    });
+
+    it('should resolve with deserialized complex array if input data is valid', async () => {
+      const testData = {complexTypeArray: [{test: 'IAmATest'}, {test: 'IAmATest'}]};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.complexTypeArray.length).to.equal(2);
+      expect(result.complexTypeArray[0]).to.be.instanceof(TestClassNoMandatoryExclude);
+      expect(result.complexTypeArray[0].test).to.equal('IAmATest');
+    });
+
+    it('should resolve with deserialized abstract array if input data is valid', async () => {
+      const testData = {abstractTypeArray: [{test: 'IAmATest', typeDef: 'testType'}, {test: 'IAmATest', typeDef: 'testTypeB'}]};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.abstractTypeArray.length).to.equal(2);
+      expect(result.abstractTypeArray[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
+      expect(result.abstractTypeArray[1]).to.be.instanceof(TestClassNoMandatoryExclude);
+      expect(result.abstractTypeArray[0].test).to.equal('IAmATest');
+    });
+
+    it('should resolve with deserialized simple array if input data is valid', async () => {
+      const testData = {simpleArray: ['testA', 'testB']};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.simpleArray.length).to.equal(2);
+      expect(result.simpleArray[0]).to.equal('testA');
+      expect(result.simpleArray[1]).to.equal('testB');
+    });
+
   });
 
   describe('deserializeFile', () => {

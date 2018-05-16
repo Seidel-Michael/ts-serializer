@@ -45,6 +45,17 @@ export function ComplexType(type: any): (target: any, key: string) => void {
 }
 
 /**
+ * This decorator marks the property as an array for deserialization.
+ *
+ * @export
+ * @param {*} target The target object.
+ * @param {string} key The target property.
+ */
+export function ArrayType(target: any, key: string): void {
+  target['_serializable_array'] ? target['_serializable_array'].push(key) : target['_serializable_array'] = [key];
+}
+
+/**
  * This decorator adds a type implementation to the class metadata for deserialization of abstract types.
  * The type must be serializable itself.
  *
