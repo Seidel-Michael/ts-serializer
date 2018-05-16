@@ -92,10 +92,10 @@ export class Serializer {
   static deserialize<T extends Serializable>(type: any, serializedData: any): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
 
-      const newObject = new type();
-
       // Init empty arrays
-      this.initEmptyArrays(newObject);
+      this.initEmptyArrays(type.prototype);
+
+      const newObject = new type();
 
       // Check mandatory fields
       newObject['_serializable_mandatory'].forEach(property => {
