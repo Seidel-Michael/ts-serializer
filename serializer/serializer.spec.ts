@@ -7,7 +7,8 @@ import * as fs from 'fs-extra';
 import * as mockFS from 'mock-fs';
 import * as sinon from 'sinon';
 
-import {FileNotFoundError, FileParseError, FileReadError, FileWriteError, SerializedObjectIncompleteError} from './errors';
+import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
+import {SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
 import {Serializable} from './serializable';
 import {Serializer} from './serializer';
 
@@ -31,6 +32,22 @@ class TestClassMandatoryNoExclude implements Serializable {
     this['_serializable_mandatory'] = ['mandatoryProperty'];
   }
 }
+
+class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
+  abstractType: any;
+
+  test: string;
+
+  constructor() {
+    this.test = 'Test123';
+    this.abstractType = {};
+    this.abstractType.typeDef = 'abstract';
+    this.abstractType['_serializable_mandatory'] = ['typeDef'];
+    this['_serializable_abstracttype'] = new Map().set('abstractType', 'typeDef');
+    TestClassAbstractTypeNoMandatoryNoExclude.prototype['_serializable_typeimplementation'] = new Map().set('testType', TestClassMandatoryNoExclude);
+  }
+}
+
 
 class TestClassNoMandatoryNoExcludeComplex implements Serializable {
   test: string;
@@ -137,6 +154,36 @@ describe('Serializer', () => {
 
       return expect(Serializer.deserialize<TestClassNoMandatoryNoExcludeComplex>(TestClassNoMandatoryNoExcludeComplex, testData))
           .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should reject with UnknownTypeDefinition if abstract type is not defined in prototype', () => {
+      const testData = {test: 'IAmATest', abstractType: {typeDef: 'testTypeNotDefined', mandatoryProperty: 'IAmThere'}};
+
+      return expect(Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(UnknownTypeDefinitionError);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if type definition property is missing in input', () => {
+      const testData = {test: 'IAmATest', abstractType: {mandatoryProperty: 'IAmThere'}};
+
+      return expect(Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if property of abstract type is missing in input data', () => {
+      const testData = {test: 'IAmATest', abstractType: {typeDef: 'testType'}};
+
+      return expect(Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should resolve with deserialized abstract object - valid input data', async () => {
+      const testData = {test: 'IAmATest', abstractType: {typeDef: 'testType', mandatoryProperty: 'IAmThere'}};
+
+      const result = await Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData);
+      expect(result.test).to.equal('IAmATest');
+      expect(result.abstractType).to.be.instanceof(TestClassMandatoryNoExclude);
+      expect(result.abstractType.mandatoryProperty).to.equal('IAmThere');
     });
   });
 

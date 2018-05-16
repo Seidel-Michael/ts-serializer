@@ -49,10 +49,20 @@ You can exclude a property from serialization and deserialization. If marked it 
 You can mark a property as complex for serialization and deserialization. If marked the property will be serialized itself.
 The given type hast to be serializable itself.
 
+### The AddTypeImplementation decorator
+You can add implementations of an abstract type to the class metadata. This has to be done to be able to use the AbstractType decorator. 
+The given type hast to be serializable itself.
+
+### The AbstractType decorator
+You can mark a property as an abstract type for serialization. If marked the serializer will look up the given type property amd
+tries to find the implementation information of the AddTypeImplementation decorator.
+
 ### Example
 ```ts
 import {Serializable, Mandatory, NonSerialized} from './serializable';
 
+@AddTypeImplementation('testTypeA', MyTypeA)
+@AddTypeImplementation('testTypeB', MyTypeB)
 class TestClass implements Serializable {
   @Mandatory
   testString: string;
@@ -63,6 +73,9 @@ class TestClass implements Serializable {
   @Mandatory
   @ComplexType(MyComplexObject)
   testComplex: MyComplexObject
+
+  @AbstractType('type')
+  testAbstract: IMyType
 
   testArray: [];
 
@@ -88,6 +101,7 @@ class TestClass implements Serializable {
    * @param {*} serializedData The serialized data to deserialize.
    * @returns {Promise<T>} Returns a promise resolving with the deserialize object
    * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
    * @memberof Serializer
    */
   static deserialize<T extends Serializable>(type: any, serializedData: any): Promise<T> 
@@ -132,6 +146,7 @@ Serializer.deserialize<TestClass>(TestClass, input).then((obj) => { JSON.stringi
    * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
    * It also rejects with FileNotFoundError if the file could not be found; FileReadError if any error ocurred during read;
    * FileParseError if the file content is not valid json.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
    * @memberof Serializer
    */
   static deserializeFile<T extends Serializable>(type: any, file: any): Promise<T>
@@ -249,3 +264,4 @@ Serializer.serializeFile<TestClass>(test, 'test.json').then(() => { console.log(
 - It is possible to provide different types as T and type in the deserialize methods.
 - It is possible to deserialize a string to a number type.
 - It is possible to provide a different object as T in the serialize method.
+- It is possible to serialize an abstract type without the type information.

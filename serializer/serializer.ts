@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 
-import {FileNotFoundError, FileParseError, FileReadError, FileWriteError, SerializedObjectIncompleteError} from './errors';
+import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
+import {SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
 import {Serializable} from './serializable';
 
 /**
@@ -11,6 +12,37 @@ import {Serializable} from './serializable';
  */
 export class Serializer {
   /**
+   * Initializes all mandatory arrays and maps on the object if not initialized already.
+   *
+   * @private
+   * @static
+   * @param {*} object The object to initialize
+   * @memberof Serializer
+   */
+  private static initEmptyArrays(object: any): void {
+    // Init empty arrays
+    if (!object['_serializable_mandatory']) {
+      object['_serializable_mandatory'] = [];
+    }
+
+    if (!object['_serializable_nonserialized']) {
+      object['_serializable_nonserialized'] = [];
+    }
+
+    if (!object['_serializable_complextype']) {
+      object['_serializable_complextype'] = new Map();
+    }
+
+    if (!object['_serializable_abstracttype']) {
+      object['_serializable_abstracttype'] = new Map();
+    }
+
+    if (!object['_serializable_typeimplementation']) {
+      object['_serializable_typeimplementation'] = new Map();
+    }
+  }
+
+  /**
    * Deserializes an object from serialized data.
    *
    * @static
@@ -19,6 +51,7 @@ export class Serializer {
    * @param {*} serializedData The serialized data to deserialize.
    * @returns {Promise<T>} Returns a promise resolving with the deserialize object
    * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
    * @memberof Serializer
    */
   static deserialize<T extends Serializable>(type: any, serializedData: any): Promise<T> {
@@ -27,17 +60,7 @@ export class Serializer {
       const newObject = new type();
 
       // Init empty arrays
-      if (!newObject['_serializable_mandatory']) {
-        newObject['_serializable_mandatory'] = [];
-      }
-
-      if (!newObject['_serializable_nonserialized']) {
-        newObject['_serializable_nonserialized'] = [];
-      }
-
-      if (!newObject['_serializable_complextype']) {
-        newObject['_serializable_complextype'] = new Map();
-      }
+      this.initEmptyArrays(newObject);
 
       // Check mandatory fields
       newObject['_serializable_mandatory'].forEach(property => {
@@ -50,15 +73,37 @@ export class Serializer {
       // Assign values
       for (const property in serializedData) {
         if (!newObject['_serializable_nonserialized'].includes(property)) {
-          if (!newObject['_serializable_complextype'].get(property)) {
-            newObject[property] = serializedData[property];
-          } else {
+          if (newObject['_serializable_complextype'].get(property)) {
             try {
               newObject[property] = await this.deserialize(newObject['_serializable_complextype'].get(property), serializedData[property]);
             } catch (err) {
               reject(err);
               return;
             }
+          } else if (newObject['_serializable_abstracttype'].get(property)) {
+            const typeName = serializedData[property][newObject['_serializable_abstracttype'].get(property)];
+
+            if (!typeName) {
+              reject(
+                  new SerializedObjectIncompleteError('abstract', serializedData[property], newObject['_serializable_abstracttype'].get(property)));
+              return;
+            }
+
+            const typeDefinition = newObject['_serializable_typeimplementation'].get(typeName);
+
+            if (!typeDefinition) {
+              reject(new UnknownTypeDefinitionError(typeName, serializedData[property]));
+              return;
+            }
+
+            try {
+              newObject[property] = await this.deserialize(typeDefinition, serializedData[property]);
+            } catch (err) {
+              reject(err);
+              return;
+            }
+          } else {
+            newObject[property] = serializedData[property];
           }
         }
       }
@@ -79,6 +124,7 @@ export class Serializer {
    * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
    * It also rejects with FileNotFoundError if the file could not be found; FileReadError if any error ocurred during read;
    * FileParseError if the file content is not valid json.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
    * @memberof Serializer
    */
   static deserializeFile<T extends Serializable>(type: any, file: any): Promise<T> {

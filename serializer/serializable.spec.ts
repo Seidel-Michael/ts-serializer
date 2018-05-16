@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 
-import {Mandatory, NonSerialized, ComplexType} from './serializable';
+import {Mandatory, NonSerialized, ComplexType, AddTypeImplementation, AbstractType} from './serializable';
 
 describe('Serializable decorators', () => {
   describe('Mandatory', () => {
@@ -44,7 +44,7 @@ describe('Serializable decorators', () => {
   });
 
   describe('NonSerialized', () => {
-    it('should create _serializable_nonserialized create on target object with key as first item on first call.', () => {
+    it('should create _serializable_nonserialized on target object with key as first item on first call.', () => {
       const target = {};
 
       NonSerialized(target, 'abc');
@@ -60,6 +60,41 @@ describe('Serializable decorators', () => {
 
       expect(target['_serializable_nonserialized']).to.contain('abc');
       expect(target['_serializable_nonserialized']).to.contain('cde');
+    });
+  });
+
+  describe('AddTypeImplementation', () => {
+    it('should create _serializable_typeimplementation to prototype with implementation as first item on first call.', () => {
+      AddTypeImplementation('abc', String)(Number);
+
+      expect(Number.prototype['_serializable_typeimplementation'].get('abc')).to.equal(String);
+    });
+
+    it('should add implementation to _serializable_typeimplementation of prototype on second call.', () => {
+      AddTypeImplementation('abc', String)(Number);
+      AddTypeImplementation('cde', Array)(Number);
+
+      expect(Number.prototype['_serializable_typeimplementation'].get('cde')).to.equal(Array);
+    });
+  });
+
+  describe('AbstractType', () => {
+    it('should create _serializable_abstracttype on target object with typename as first item on first call.', () => {
+      const target = {};
+
+      AbstractType('abc')(target, 'testA');
+
+      expect(target['_serializable_abstracttype'].get('testA')).to.equal('abc');
+    });
+
+    it('should add typename to _serializable_abstracttype of target object on second call.', () => {
+      const target = {};
+
+      AbstractType('abc')(target, 'testA');
+      AbstractType('cde')(target, 'testB');
+
+      expect(target['_serializable_abstracttype'].get('testA')).to.equal('abc');      
+      expect(target['_serializable_abstracttype'].get('testB')).to.equal('cde');
     });
   });
 });
