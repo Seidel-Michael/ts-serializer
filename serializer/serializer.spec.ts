@@ -32,6 +32,19 @@ class TestClassMandatoryNoExclude implements Serializable {
   }
 }
 
+class TestClassNoMandatoryNoExcludeComplex implements Serializable {
+  test: string;
+
+  complex: TestClassMandatoryExclude;
+
+  constructor() {
+    this.test = 'Test123';
+    this.complex = new TestClassMandatoryExclude();
+    this.complex.mandatoryProperty = 'abc';
+    this['_serializable_complextype'] = new Map().set('complex', TestClassMandatoryExclude);
+  }
+}
+
 class TestClassMandatoryExclude implements Serializable {
   mandatoryProperty: string;
 
@@ -110,6 +123,21 @@ describe('Serializer', () => {
       return expect(Serializer.deserialize<TestClassMandatoryNoExclude>(TestClassMandatoryNoExclude, testData))
           .to.be.rejectedWith(SerializedObjectIncompleteError);
     });
+
+    it('should resolve with deserialized complex object - valid input data', async () => {
+      const testData = {test: 'IAmATest', complex: {mandatoryProperty: 'xyz'}};
+
+      const result = await Serializer.deserialize<TestClassNoMandatoryNoExcludeComplex>(TestClassNoMandatoryNoExcludeComplex, testData);
+      expect(result).to.include({test: 'IAmATest'});
+      expect(result.complex).to.include({mandatoryProperty: 'xyz', test: 'Test123'});
+    });
+
+    it('should reject with SerializedObjectIncompleteError if data of complex type is missing - invalid input data', () => {
+      const testData = {test: 'IAmATest', complex: {test: 'xyz'}};
+
+      return expect(Serializer.deserialize<TestClassNoMandatoryNoExcludeComplex>(TestClassNoMandatoryNoExcludeComplex, testData))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
   });
 
   describe('deserializeFile', () => {
@@ -181,6 +209,17 @@ describe('Serializer', () => {
       object.excludedProperty = 'abc test';
 
       return expect(Serializer.serialize<TestClassMandatoryExclude>(object)).to.eventually.deep.equal({test: 'Test123', mandatoryProperty: 'test'});
+    });
+
+    it('should resolve with valid serialized complex object - exclude', () => {
+      const object = new TestClassNoMandatoryNoExcludeComplex();
+      object.test = 'IAmATest';
+      object.complex.excludedProperty = 'ExcludeMe';
+      object.complex.test = 'IAmATestToo';
+      object.complex.mandatoryProperty = 'IAmJustAnotherTest';
+
+      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', complex: {test: 'IAmATestToo', mandatoryProperty: 'IAmJustAnotherTest'}});
     });
   });
 

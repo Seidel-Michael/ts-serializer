@@ -22,7 +22,7 @@ export class Serializer {
    * @memberof Serializer
    */
   static deserialize<T extends Serializable>(type: any, serializedData: any): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T>(async (resolve, reject) => {
 
       const newObject = new type();
 
@@ -33,6 +33,10 @@ export class Serializer {
 
       if (!newObject['_serializable_nonserialized']) {
         newObject['_serializable_nonserialized'] = [];
+      }
+
+      if (!newObject['_serializable_complextype']) {
+        newObject['_serializable_complextype'] = new Map();
       }
 
       // Check mandatory fields
@@ -46,7 +50,16 @@ export class Serializer {
       // Assign values
       for (const property in serializedData) {
         if (!newObject['_serializable_nonserialized'].includes(property)) {
-          newObject[property] = serializedData[property];
+          if (!newObject['_serializable_complextype'].get(property)) {
+            newObject[property] = serializedData[property];
+          } else {
+            try {
+              newObject[property] = await this.deserialize(newObject['_serializable_complextype'].get(property), serializedData[property]);
+            } catch (err) {
+              reject(err);
+              return;
+            }
+          }
         }
       }
 
@@ -101,11 +114,15 @@ export class Serializer {
    * @returns {Promise<any>} Returns a promise resolving with the serialized data.
    * @memberof Serializer
    */
-  static serialize<T extends Serializable>(object: T): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
+  static serialize<T extends Serializable>(object: any): Promise<any> {
+    return new Promise<any>(async (resolve, reject) => {
       // Init empty array
       if (!object['_serializable_nonserialized']) {
         object['_serializable_nonserialized'] = [];
+      }
+
+      if (!object['_serializable_complextype']) {
+        object['_serializable_complextype'] = new Map();
       }
 
       const serializedData: any = {};
@@ -114,6 +131,12 @@ export class Serializer {
       for (const property in object) {
         if (!object['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_')) {
           serializedData[property] = object[property];
+
+          if (!object['_serializable_complextype'].get(property)) {
+            serializedData[property] = object[property];
+          } else {
+            serializedData[property] = await this.serialize(object[property]);
+          }
         }
       }
 

@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 
-import {Mandatory, NonSerialized} from './serializable';
+import {Mandatory, NonSerialized, ComplexType} from './serializable';
 
 describe('Serializable decorators', () => {
   describe('Mandatory', () => {
@@ -20,6 +20,26 @@ describe('Serializable decorators', () => {
 
       expect(target['_serializable_mandatory']).to.contain('abc');
       expect(target['_serializable_mandatory']).to.contain('cde');
+    });
+  });
+
+  describe('ComplexType', () => {
+    it('should create _serializable_complextype on target object with key and parameter type as first item on first call.', () => {
+      const target = {};
+
+      ComplexType(String)(target, 'abc');
+
+      expect(target['_serializable_complextype'].get('abc')).to.equal(String);
+    });
+
+    it('should add key to _serializable_complextype on target object on second call.', () => {
+      const target = {};
+
+      ComplexType(String)(target, 'abc');
+      ComplexType(Number)(target, 'cde');
+
+      expect(target['_serializable_complextype'].get('abc')).to.equal(String);
+      expect(target['_serializable_complextype'].get('cde')).to.equal(Number);
     });
   });
 

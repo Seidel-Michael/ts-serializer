@@ -45,6 +45,10 @@ Otherwise you'll receive a SerializedObjectIncompleteError.
 ### The NonSerialized decorator
 You can exclude a property from serialization and deserialization. If marked it will be ignored by the serializer.
 
+### The ComplexType decorator
+You can mark a property as complex for serialization and deserialization. If marked the property will be serialized itself.
+The given type hast to be serializable itself.
+
 ### Example
 ```ts
 import {Serializable, Mandatory, NonSerialized} from './serializable';
@@ -56,12 +60,17 @@ class TestClass implements Serializable {
   @NonSerialized
   testNumber: number;
 
+  @Mandatory
+  @ComplexType(MyComplexObject)
+  testComplex: MyComplexObject
+
   testArray: [];
 
   constructor() {
     this.testString = 'Test123';
     this.testNumber = 42;
     this.testArray = ['Abc', 'Cde'];
+    this.testComplex = new MyComplexType;
   }
 }
 ```
@@ -239,3 +248,4 @@ Serializer.serializeFile<TestClass>(test, 'test.json').then(() => { console.log(
 # Open Issues to consider sometime
 - It is possible to provide different types as T and type in the deserialize methods.
 - It is possible to deserialize a string to a number type.
+- It is possible to provide a different object as T in the serialize method.
