@@ -126,7 +126,6 @@ export class Serializer {
 
           data.forEach(element => {
             if (newObject['_serializable_complextype'].get(property)) {
-              console.log(newObject['_serializable_complextype'].get(property));
               openPromises.push(this.deserialize(newObject['_serializable_complextype'].get(property), element).then((obj) => {
                 isArray ? newObject[property].push(obj) : newObject[property] = obj;
               }));
