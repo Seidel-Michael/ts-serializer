@@ -15,7 +15,13 @@ export interface Serializable {}
  * @param {string} key
  */
 export function NonSerialized(target: any, key: string): void {
-  target['_serializable_nonserialized'] ? target['_serializable_nonserialized'].push(key) : target['_serializable_nonserialized'] = [key];
+  if (target['_serializable_nonserialized']) {
+    if (!target['_serializable_nonserialized'].includes(key)) {
+      target['_serializable_nonserialized'].push(key);
+    }
+  } else {
+    target['_serializable_nonserialized'] = [key];
+  }
 }
 
 /**
@@ -26,7 +32,13 @@ export function NonSerialized(target: any, key: string): void {
  * @param {string} key The target property.
  */
 export function Mandatory(target: any, key: string): void {
-  target['_serializable_mandatory'] ? target['_serializable_mandatory'].push(key) : target['_serializable_mandatory'] = [key];
+  if (target['_serializable_mandatory']) {
+    if (!target['_serializable_mandatory'].includes(key)) {
+      target['_serializable_mandatory'].push(key);
+    }
+  } else {
+    target['_serializable_mandatory'] = [key];
+  }
 }
 
 /**
@@ -52,7 +64,13 @@ export function ComplexType(type: any): (target: any, key: string) => void {
  * @param {string} key The target property.
  */
 export function ArrayType(target: any, key: string): void {
-  target['_serializable_array'] ? target['_serializable_array'].push(key) : target['_serializable_array'] = [key];
+  if (target['_serializable_array']) {
+    if (!target['_serializable_array'].includes(key)) {
+      target['_serializable_array'].push(key);
+    }
+  } else {
+    target['_serializable_array'] = [key];
+  }
 }
 
 /**

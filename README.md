@@ -2,9 +2,6 @@
 The ts-serializer package is a simple promise based serialization helper library for nodejs typescript.
 It is able to serialize and deserialize objects to and from json files or memory if you know the expected type.
 
-## Limitations
-The library only works with simple types like number and string. 
-
 # Usage
 
 ## Enable experimental Decorators
