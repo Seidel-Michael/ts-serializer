@@ -309,7 +309,7 @@ export class Serializer {
               reject(new FileWriteError(file, error));
             })
             .then(() => {
-              fs.writeJson(file, serializedData)
+              fs.writeJson(file, serializedData, {spaces: ' '})
                   .catch((error) => {
                     reject(new FileWriteError(file, error));
                   })
