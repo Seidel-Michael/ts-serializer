@@ -265,6 +265,9 @@ const test = new TestClass();
 Serializer.serializeFile<TestClass>(test, 'test.json').then(() => { console.log('Saved!'); });
 ```
 
+# New Feature Ideas
+- Implement a custom serialize order for more readable output.
+
 # Open Issues to consider sometime
 - It is possible to provide different types as T and type in the deserialize methods.
 - It is possible to deserialize a string to a number type.
