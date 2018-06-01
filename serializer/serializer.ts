@@ -163,7 +163,7 @@ export class Serializer {
 
       // Check mandatory fields
       newObject[newObjectClassName]['_serializable_mandatory'].forEach(property => {
-        if (!serializedData[property]) {
+        if (!serializedData.hasOwnProperty(property)) {
           reject(new SerializedObjectIncompleteError(type.name, serializedData, property));
           return;
         }

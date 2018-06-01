@@ -32,6 +32,16 @@ class TestClassMandatoryNoExclude implements Serializable {
   }
 }
 
+class TestClassMandatoryNoExcludeBool implements Serializable {
+  @Mandatory mandatoryProperty: boolean;
+
+  test: string;
+
+  constructor() {
+    this.test = 'Test123';
+  }
+}
+
 class TestClassAbstractImplementation implements Serializable {
   @Mandatory typeDef: string;
 
@@ -213,6 +223,13 @@ describe('Serializer', () => {
 
       return expect(Serializer.deserialize<TestClassMandatoryNoExclude>(TestClassMandatoryNoExclude, testData))
           .to.eventually.include({test: 'Test123', mandatoryProperty: 'TestingTest'});
+    });
+
+    it('should resolve with deserialized object - valid input data, mandatory, no exclude - boolean mandatory false', () => {
+      const testData = {mandatoryProperty: false};
+
+      return expect(Serializer.deserialize<TestClassMandatoryNoExcludeBool>(TestClassMandatoryNoExcludeBool, testData))
+          .to.eventually.include({test: 'Test123', mandatoryProperty: false});
     });
 
     it('should resolve with deserialized object - valid input data, mandatory, exclude', () => {
