@@ -1,11 +1,12 @@
 {
   "name": "ts-serializer",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "A simple typescript serialization library.",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index",
     "test": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --reporter spec --require ts-node/register --require source-map-support/register --full-trace '**/**/*.spec.ts'",
+    "test-trace": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --reporter spec --require ts-node/register --require source-map-support/register --full-trace '**/**/*.spec.ts' --trace-warnings",
     "lint": "./node_modules/.bin/tslint --project tsconfig.json",
     "build": "./node_modules/.bin/tsc",
     "postinstall": "postinstall-build dist"

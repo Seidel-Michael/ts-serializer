@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 
 import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
 import {SerializedDataIsNotAnArrayError, SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
-import {Serializable} from './serializable';
+import {AbstractType, AddTypeImplementation, ArrayType, ComplexType, Mandatory, NonSerialized, Serializable} from './serializable';
 import {Serializer} from './serializer';
 
 chai.use(chaiAsPromised);
@@ -23,86 +23,175 @@ class TestClassNoMandatoryNoExclude implements Serializable {
 }
 
 class TestClassMandatoryNoExclude implements Serializable {
-  mandatoryProperty: string;
+  @Mandatory mandatoryProperty: string;
 
   test: string;
 
   constructor() {
     this.test = 'Test123';
-    this['_serializable_mandatory'] = ['mandatoryProperty'];
   }
 }
 
+class TestClassAbstractImplementation implements Serializable {
+  @Mandatory typeDef: string;
+
+  constructor() {}
+}
+
+@AddTypeImplementation('testType', TestClassAbstractImplementation)
+class TestClassInheritanceBase implements Serializable {
+  @Mandatory mandatoryProperty: string;
+
+  @NonSerialized excludedProperty: string;
+
+  @AbstractType('typeDef')
+  abstractType: any;
+
+  @ComplexType(TestClassNoMandatoryNoExclude) @ArrayType complexTypeArray: TestClassNoMandatoryNoExclude[];
+
+  constructor() {
+    this.excludedProperty = 'excludeMe';
+  }
+}
+
+@AddTypeImplementation('testTypeB', TestClassAbstractImplementation)
+class TestClassInheritanceNew extends TestClassInheritanceBase implements Serializable {
+  @Mandatory mandatoryPropertyNew: string;
+
+  @NonSerialized excludedPropertyNew: string;
+
+  @AbstractType('typeDef')
+  abstractTypeNew: any;
+
+  @ComplexType(TestClassNoMandatoryNoExclude) @ArrayType complexTypeArrayNew: TestClassNoMandatoryNoExclude[];
+
+  constructor() {
+    super();
+
+    this.excludedProperty = 'excludeMe';
+  }
+}
+
+
+@AddTypeImplementation('testType', TestClassAbstractImplementation) @AddTypeImplementation('testTypeB', TestClassMandatoryNoExclude)
 class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
+  @AbstractType('typeDef')
   abstractType: any;
 
   test: string;
 
   constructor() {
     this.test = 'Test123';
-    this.abstractType = {};
+    this.abstractType = new TestClassAbstractImplementation();
     this.abstractType.typeDef = 'abstract';
-    this.abstractType['_serializable_mandatory'] = ['typeDef'];
-    this['_serializable_abstracttype'] = new Map().set('abstractType', 'typeDef');
-    TestClassAbstractTypeNoMandatoryNoExclude.prototype['_serializable_typeimplementation'] = new Map().set('testType', TestClassMandatoryNoExclude);
   }
 }
 
+@AddTypeImplementation('testType', TestClassAbstractImplementation) @AddTypeImplementation('testTypeB', TestClassAbstractImplementation)
 class TestClassArrayNoMandatoryNoExclude implements Serializable {
-  abstractTypeArray: any[];
+  @AbstractType('typeDef') @ArrayType abstractTypeArray: any[];
 
-  complexTypeArray: TestClassNoMandatoryNoExclude[];
+  @ComplexType(TestClassNoMandatoryNoExclude) @ArrayType complexTypeArray: TestClassNoMandatoryNoExclude[];
 
-  simpleArray: string[];
+  @ArrayType simpleArray: string[];
+
+  constructor() {}
+}
+
+class TestClassMandatoryExclude implements Serializable {
+  @Mandatory mandatoryProperty: string;
+
+  @NonSerialized excludedProperty: string;
+
+  test: string;
 
   constructor() {
-    TestClassArrayNoMandatoryNoExclude.prototype['_serializable_typeimplementation'] = new Map().set('testType', TestClassNoMandatoryNoExclude);
-    TestClassArrayNoMandatoryNoExclude.prototype['_serializable_typeimplementation'].set('testTypeB', TestClassNoMandatoryExclude);
-    this['_serializable_abstracttype'] = new Map().set('abstractTypeArray', 'typeDef');
-    this['_serializable_complextype'] = new Map().set('complexTypeArray', TestClassNoMandatoryExclude);
-    this['_serializable_array'] = ['abstractTypeArray', 'complexTypeArray', 'simpleArray'];
+    this.test = 'Test123';
   }
 }
 
 class TestClassNoMandatoryNoExcludeComplex implements Serializable {
   test: string;
 
+  @ComplexType(TestClassMandatoryExclude)
   complex: TestClassMandatoryExclude;
 
   constructor() {
     this.test = 'Test123';
     this.complex = new TestClassMandatoryExclude();
     this.complex.mandatoryProperty = 'abc';
-    this['_serializable_complextype'] = new Map().set('complex', TestClassMandatoryExclude);
   }
 }
 
-class TestClassMandatoryExclude implements Serializable {
-  mandatoryProperty: string;
-
-  excludedProperty: string;
-
-  test: string;
-
-  constructor() {
-    this.test = 'Test123';
-    this['_serializable_mandatory'] = ['mandatoryProperty'];
-    this['_serializable_nonserialized'] = ['excludedProperty'];
-  }
-}
 
 class TestClassNoMandatoryExclude implements Serializable {
-  excludedProperty: string;
+  @NonSerialized excludedProperty: string;
 
   test: string;
 
   constructor() {
     this.test = 'Test123';
-    this['_serializable_nonserialized'] = ['excludedProperty'];
   }
 }
 
 describe('Serializer', () => {
+  describe('deserialize inheritance', () => {
+    it('should resolve with deserialized object - TestClassInheritanceBase', async () => {
+      const testData =
+          {mandatoryProperty: 'BaseMandatory', abstractType: {typeDef: 'testType'}, complexTypeArray: [{test: 'BaseTest'}], excludedProperty: 'abc'};
+
+      const test = await Serializer.deserialize<TestClassInheritanceBase>(TestClassInheritanceBase, testData);
+
+      expect(test.mandatoryProperty).to.equal('BaseMandatory');
+      expect(test.abstractType).to.be.instanceof(TestClassAbstractImplementation);
+      expect(test.complexTypeArray[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
+      expect(test.complexTypeArray[0].test).to.equal('BaseTest');
+      expect(test.excludedProperty).to.equal('excludeMe');
+    });
+
+    it('should resolve with deserialized object - TestClassInheritanceNew', async () => {
+      const testData = {
+        mandatoryProperty: 'BaseMandatory',
+        abstractType: {typeDef: 'testType'},
+        complexTypeArray: [{test: 'BaseTest'}],
+        excludedProperty: 'abc',
+        mandatoryPropertyNew: 'NewMandatory',
+        abstractTypeNew: {typeDef: 'testTypeB'},
+        complexTypeArrayNew: [{test: 'NewTest'}],
+        excludedPropertyNew: 'abc'
+      };
+
+      const test = await Serializer.deserialize<TestClassInheritanceNew>(TestClassInheritanceNew, testData);
+
+      expect(test.mandatoryProperty).to.equal('BaseMandatory');
+      expect(test.abstractType).to.be.instanceof(TestClassAbstractImplementation);
+      expect(test.complexTypeArray[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
+      expect(test.complexTypeArray[0].test).to.equal('BaseTest');
+      expect(test.excludedProperty).to.equal('excludeMe');
+
+      expect(test.mandatoryPropertyNew).to.equal('NewMandatory');
+      expect(test.abstractTypeNew).to.be.instanceof(TestClassAbstractImplementation);
+      expect(test.complexTypeArrayNew[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
+      expect(test.complexTypeArrayNew[0].test).to.equal('NewTest');
+      expect(test.excludedProperty).to.equal('excludeMe');
+    });
+
+    it('should reject with SerializedObjectIncompleteError if mandatory data of base class is missing - TestClassInheritanceNew', async () => {
+      const testData = {
+        abstractType: {typeDef: 'testType'},
+        complexTypeArray: [{test: 'BaseTest'}],
+        excludedProperty: 'abc',
+        mandatoryPropertyNew: 'NewMandatory',
+        abstractTypeNew: {typeDef: 'testTypeB'},
+        complexTypeArrayNew: [{test: 'NewTest'}],
+        excludedPropertyNew: 'abc'
+      };
+
+      return expect(Serializer.deserialize<TestClassInheritanceNew>(TestClassInheritanceNew, testData))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+  });
+
   describe('deserialize', () => {
     it('should resolve with deserialized object - no input data, no mandatory, no exclude', () => {
       const testData = {};
@@ -186,7 +275,7 @@ describe('Serializer', () => {
     });
 
     it('should reject with SerializedObjectIncompleteError if property of abstract type is missing in input data', () => {
-      const testData = {test: 'IAmATest', abstractType: {typeDef: 'testType'}};
+      const testData = {test: 'IAmATest', abstractType: {typeDef: 'testTypeB'}};
 
       return expect(Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData))
           .to.be.rejectedWith(SerializedObjectIncompleteError);
@@ -197,7 +286,7 @@ describe('Serializer', () => {
 
       const result = await Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData);
       expect(result.test).to.equal('IAmATest');
-      expect(result.abstractType).to.be.instanceof(TestClassMandatoryNoExclude);
+      expect(result.abstractType).to.be.instanceof(TestClassAbstractImplementation);
       expect(result.abstractType.mandatoryProperty).to.equal('IAmThere');
     });
 
@@ -228,7 +317,7 @@ describe('Serializer', () => {
       const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
 
       expect(result.complexTypeArray.length).to.equal(2);
-      expect(result.complexTypeArray[0]).to.be.instanceof(TestClassNoMandatoryExclude);
+      expect(result.complexTypeArray[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
       expect(result.complexTypeArray[0].test).to.equal('IAmATest');
     });
 
@@ -238,8 +327,8 @@ describe('Serializer', () => {
       const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
 
       expect(result.abstractTypeArray.length).to.equal(2);
-      expect(result.abstractTypeArray[0]).to.be.instanceof(TestClassNoMandatoryNoExclude);
-      expect(result.abstractTypeArray[1]).to.be.instanceof(TestClassNoMandatoryExclude);
+      expect(result.abstractTypeArray[0]).to.be.instanceof(TestClassAbstractImplementation);
+      expect(result.abstractTypeArray[1]).to.be.instanceof(TestClassAbstractImplementation);
       expect(result.abstractTypeArray[0].test).to.equal('IAmATest');
     });
 
@@ -307,6 +396,34 @@ describe('Serializer', () => {
 
       return expect(Serializer.deserializeFile<TestClassNoMandatoryNoExclude>(TestClassNoMandatoryNoExclude, '/testFolder/testFile.json'))
           .to.eventually.include({test: 'cde'});
+    });
+  });
+
+  describe('serialize inheritance', () => {
+    it('should resolve with valid serialized object', () => {
+      const object = new TestClassInheritanceNew();
+      object.mandatoryProperty = 'BaseMandatory';
+      object.abstractType = new TestClassAbstractImplementation();
+      object.abstractType.typeDef = 'testType';
+      const objBase = new TestClassNoMandatoryNoExclude();
+      objBase.test = 'BaseTest';
+      object.complexTypeArray = [objBase];
+
+      object.mandatoryPropertyNew = 'NewMandatory';
+      object.abstractTypeNew = new TestClassAbstractImplementation();
+      object.abstractTypeNew.typeDef = 'testTypeB';
+      const objNew = new TestClassNoMandatoryNoExclude();
+      objNew.test = 'NewTest';
+      object.complexTypeArrayNew = [objNew];
+
+      return expect(Serializer.serialize<TestClassInheritanceNew>(object)).to.eventually.deep.equal({
+        mandatoryProperty: 'BaseMandatory',
+        abstractType: {typeDef: 'testType'},
+        complexTypeArray: [{test: 'BaseTest'}],
+        mandatoryPropertyNew: 'NewMandatory',
+        abstractTypeNew: {typeDef: 'testTypeB'},
+        complexTypeArrayNew: [{test: 'NewTest'}],
+      });
     });
   });
 

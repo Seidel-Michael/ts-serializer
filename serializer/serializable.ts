@@ -15,12 +15,16 @@ export interface Serializable {}
  * @param {string} key
  */
 export function NonSerialized(target: any, key: string): void {
-  if (target['_serializable_nonserialized']) {
-    if (!target['_serializable_nonserialized'].includes(key)) {
-      target['_serializable_nonserialized'].push(key);
+  if (!target[target.constructor.name]) {
+    target[target.constructor.name] = {};
+  }
+
+  if (target[target.constructor.name]['_serializable_nonserialized']) {
+    if (!target[target.constructor.name]['_serializable_nonserialized'].includes(key)) {
+      target[target.constructor.name]['_serializable_nonserialized'].push(key);
     }
   } else {
-    target['_serializable_nonserialized'] = [key];
+    target[target.constructor.name]['_serializable_nonserialized'] = [key];
   }
 }
 
@@ -32,12 +36,16 @@ export function NonSerialized(target: any, key: string): void {
  * @param {string} key The target property.
  */
 export function Mandatory(target: any, key: string): void {
-  if (target['_serializable_mandatory']) {
-    if (!target['_serializable_mandatory'].includes(key)) {
-      target['_serializable_mandatory'].push(key);
+  if (!target[target.constructor.name]) {
+    target[target.constructor.name] = {};
+  }
+
+  if (target[target.constructor.name]['_serializable_mandatory']) {
+    if (!target[target.constructor.name]['_serializable_mandatory'].includes(key)) {
+      target[target.constructor.name]['_serializable_mandatory'].push(key);
     }
   } else {
-    target['_serializable_mandatory'] = [key];
+    target[target.constructor.name]['_serializable_mandatory'] = [key];
   }
 }
 
@@ -51,8 +59,13 @@ export function Mandatory(target: any, key: string): void {
  */
 export function ComplexType(type: any): (target: any, key: string) => void {
   return (target: any, key: string): void => {
-    target['_serializable_complextype'] ? target['_serializable_complextype'].set(key, type) :
-                                          target['_serializable_complextype'] = new Map().set(key, type);
+    if (!target[target.constructor.name]) {
+      target[target.constructor.name] = {};
+    }
+
+    target[target.constructor.name]['_serializable_complextype'] ?
+        target[target.constructor.name]['_serializable_complextype'].set(key, type) :
+        target[target.constructor.name]['_serializable_complextype'] = new Map().set(key, type);
   };
 }
 
@@ -64,12 +77,16 @@ export function ComplexType(type: any): (target: any, key: string) => void {
  * @param {string} key The target property.
  */
 export function ArrayType(target: any, key: string): void {
-  if (target['_serializable_array']) {
-    if (!target['_serializable_array'].includes(key)) {
-      target['_serializable_array'].push(key);
+  if (!target[target.constructor.name]) {
+    target[target.constructor.name] = {};
+  }
+
+  if (target[target.constructor.name]['_serializable_array']) {
+    if (!target[target.constructor.name]['_serializable_array'].includes(key)) {
+      target[target.constructor.name]['_serializable_array'].push(key);
     }
   } else {
-    target['_serializable_array'] = [key];
+    target[target.constructor.name]['_serializable_array'] = [key];
   }
 }
 
@@ -84,8 +101,13 @@ export function ArrayType(target: any, key: string): void {
  */
 export function AddTypeImplementation(typeName: string, type: any): (ctor: Function) => void {
   return (ctor: Function) => {
-    ctor.prototype['_serializable_typeimplementation'] ? ctor.prototype['_serializable_typeimplementation'].set(typeName, type) :
-                                                         ctor.prototype['_serializable_typeimplementation'] = new Map().set(typeName, type);
+    if (!ctor.prototype[ctor.name]) {
+      ctor.prototype[ctor.name] = {};
+    }
+
+    ctor.prototype[ctor.name]['_serializable_typeimplementation'] ?
+        ctor.prototype[ctor.name]['_serializable_typeimplementation'].set(typeName, type) :
+        ctor.prototype[ctor.name]['_serializable_typeimplementation'] = new Map().set(typeName, type);
   };
 }
 
@@ -99,7 +121,12 @@ export function AddTypeImplementation(typeName: string, type: any): (ctor: Funct
  */
 export function AbstractType(typeProperty: any): (target: any, key: string) => void {
   return (target: any, key: string): void => {
-    target['_serializable_abstracttype'] ? target['_serializable_abstracttype'].set(key, typeProperty) :
-                                           target['_serializable_abstracttype'] = new Map().set(key, typeProperty);
+    if (!target[target.constructor.name]) {
+      target[target.constructor.name] = {};
+    }
+
+    target[target.constructor.name]['_serializable_abstracttype'] ?
+        target[target.constructor.name]['_serializable_abstracttype'].set(key, typeProperty) :
+        target[target.constructor.name]['_serializable_abstracttype'] = new Map().set(key, typeProperty);
   };
 }
