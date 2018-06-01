@@ -9,7 +9,7 @@ describe('Serializable decorators', () => {
 
       Mandatory(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_mandatory']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_mandatory']).to.contain('abc');
     });
 
     it('should add key to _serializable_mandatory array on target object on second call.', () => {
@@ -18,8 +18,8 @@ describe('Serializable decorators', () => {
       Mandatory(target, 'abc');
       Mandatory(target, 'cde');
 
-      expect(target[target.constructor.name]['_serializable_mandatory']).to.contain('abc');
-      expect(target[target.constructor.name]['_serializable_mandatory']).to.contain('cde');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_mandatory']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_mandatory']).to.contain('cde');
     });
 
     it('should not add duplicated keys to _serializable_mandatory array on target object.', () => {
@@ -29,7 +29,7 @@ describe('Serializable decorators', () => {
       Mandatory(target, 'cde');
       Mandatory(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_mandatory'].length).to.equal(2);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_mandatory'].length).to.equal(2);
     });
   });
 
@@ -39,7 +39,7 @@ describe('Serializable decorators', () => {
 
       ArrayType(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_array']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_array']).to.contain('abc');
     });
 
     it('should add key to _serializable_array array on target object on second call.', () => {
@@ -48,8 +48,8 @@ describe('Serializable decorators', () => {
       ArrayType(target, 'abc');
       ArrayType(target, 'cde');
 
-      expect(target[target.constructor.name]['_serializable_array']).to.contain('abc');
-      expect(target[target.constructor.name]['_serializable_array']).to.contain('cde');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_array']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_array']).to.contain('cde');
     });
 
     it('should not add duplicated keys to _serializable_array array on target object.', () => {
@@ -59,7 +59,7 @@ describe('Serializable decorators', () => {
       ArrayType(target, 'cde');
       ArrayType(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_array'].length).to.equal(2);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_array'].length).to.equal(2);
     });
   });
 
@@ -69,7 +69,7 @@ describe('Serializable decorators', () => {
 
       ComplexType(String)(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_complextype'].get('abc')).to.equal(String);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('abc')).to.equal(String);
     });
 
     it('should add key to _serializable_complextype on target object on second call.', () => {
@@ -78,8 +78,8 @@ describe('Serializable decorators', () => {
       ComplexType(String)(target, 'abc');
       ComplexType(Number)(target, 'cde');
 
-      expect(target[target.constructor.name]['_serializable_complextype'].get('abc')).to.equal(String);
-      expect(target[target.constructor.name]['_serializable_complextype'].get('cde')).to.equal(Number);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('abc')).to.equal(String);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('cde')).to.equal(Number);
     });
 
     it('should not add duplicated keys to _serializable_complextype array on target object.', () => {
@@ -89,7 +89,7 @@ describe('Serializable decorators', () => {
       ComplexType(Number)(target, 'cde');
       ComplexType(String)(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_complextype'].size).to.equal(2);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].size).to.equal(2);
     });
   });
 
@@ -99,7 +99,7 @@ describe('Serializable decorators', () => {
 
       NonSerialized(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_nonserialized']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_nonserialized']).to.contain('abc');
     });
 
     it('should add key to _serializable_nonserialized array on target object on second call.', () => {
@@ -108,8 +108,8 @@ describe('Serializable decorators', () => {
       NonSerialized(target, 'abc');
       NonSerialized(target, 'cde');
 
-      expect(target[target.constructor.name]['_serializable_nonserialized']).to.contain('abc');
-      expect(target[target.constructor.name]['_serializable_nonserialized']).to.contain('cde');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_nonserialized']).to.contain('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_nonserialized']).to.contain('cde');
     });
 
     it('should not add duplicated keys to _serializable_nonserialized array on target object.', () => {
@@ -119,7 +119,7 @@ describe('Serializable decorators', () => {
       NonSerialized(target, 'cde');
       NonSerialized(target, 'abc');
 
-      expect(target[target.constructor.name]['_serializable_nonserialized'].length).to.equal(2);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_nonserialized'].length).to.equal(2);
     });
   });
 
@@ -127,14 +127,14 @@ describe('Serializable decorators', () => {
     it('should create _serializable_typeimplementation to prototype with implementation as first item on first call.', () => {
       AddTypeImplementation('abc', String)(Number);
 
-      expect(Number.prototype[Number.name]['_serializable_typeimplementation'].get('abc')).to.equal(String);
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].get('abc')).to.equal(String);
     });
 
     it('should add implementation to _serializable_typeimplementation of prototype on second call.', () => {
       AddTypeImplementation('abc', String)(Number);
       AddTypeImplementation('cde', Array)(Number);
 
-      expect(Number.prototype[Number.name]['_serializable_typeimplementation'].get('cde')).to.equal(Array);
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].get('cde')).to.equal(Array);
     });
 
     it('should not add duplicated keys to _serializable_typeimplementation array on prototype.', () => {
@@ -142,7 +142,7 @@ describe('Serializable decorators', () => {
       AddTypeImplementation('cde', Array)(Number);
       AddTypeImplementation('abc', String)(Number);
 
-      expect(Number.prototype[Number.name]['_serializable_typeimplementation'].size).to.equal(2);
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].size).to.equal(2);
     });
   });
 
@@ -152,7 +152,7 @@ describe('Serializable decorators', () => {
 
       AbstractType('abc')(target, 'testA');
 
-      expect(target[target.constructor.name]['_serializable_abstracttype'].get('testA')).to.equal('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('testA')).to.equal('abc');
     });
 
     it('should add typename to _serializable_abstracttype of target object on second call.', () => {
@@ -161,8 +161,8 @@ describe('Serializable decorators', () => {
       AbstractType('abc')(target, 'testA');
       AbstractType('cde')(target, 'testB');
 
-      expect(target[target.constructor.name]['_serializable_abstracttype'].get('testA')).to.equal('abc');
-      expect(target[target.constructor.name]['_serializable_abstracttype'].get('testB')).to.equal('cde');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('testA')).to.equal('abc');
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('testB')).to.equal('cde');
     });
 
     it('should not add duplicated keys to _serializable_abstracttype array on target object.', () => {
@@ -172,7 +172,7 @@ describe('Serializable decorators', () => {
       AbstractType('cde')(target, 'testB');
       AbstractType('abc')(target, 'testA');
 
-      expect(target[target.constructor.name]['_serializable_abstracttype'].size).to.equal(2);
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].size).to.equal(2);
     });
   });
 });

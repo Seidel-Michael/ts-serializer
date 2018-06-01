@@ -274,3 +274,5 @@ Serializer.serializeFile<TestClass>(test, 'test.json').then(() => { console.log(
 - It is possible to provide a different object as T in the serialize method.
 - It is possible to serialize an abstract type without the type information.
 - It is possible to serialize a property marked as an array that isn't one.
+- Inheritance of multiple generations will duplicate keys in internal arrays.
+- Inheritance of multiple classes could fail.

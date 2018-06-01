@@ -22,11 +22,11 @@ export class Serializer {
    */
   private static copyInheritanceArrayContent(object: any, type: string): void {
     let proto = Object.getPrototypeOf(object);
-    const className = type;
-    let protoName = proto.constructor.name;
+    const className = `_serializable_${type}`;
+    let protoName = `_serializable_${proto.constructor.name}`;
 
     while (proto) {
-      protoName = proto.constructor.name;
+      protoName = `_serializable_${proto.constructor.name}`;
       if (proto[protoName]) {
         if (proto[protoName]['_serializable_mandatory']) {
           object[className]['_serializable_mandatory'].push.apply(
@@ -36,7 +36,6 @@ export class Serializer {
         if (proto[protoName]['_serializable_nonserialized']) {
           object[className]['_serializable_nonserialized'].push.apply(
               object[className]['_serializable_nonserialized'], proto[protoName]['_serializable_nonserialized']);
-          object[className]['_serializable_nonserialized'].push(protoName);
         }
 
         if (proto[protoName]['_serializable_array']) {
@@ -59,7 +58,7 @@ export class Serializer {
         }
       }
 
-      proto = proto.prototype;
+      proto = Object.getPrototypeOf(proto);
     }
   }
 
@@ -73,33 +72,35 @@ export class Serializer {
    * @memberof Serializer
    */
   private static initEmptyArrays(object: any, type: string): void {
-    if (!object[type]) {
-      object[type] = {};
+    const className = `_serializable_${type}`;
+    
+    if (!object[className]) {
+      object[className] = {};
     }
 
     // Init empty arrays
-    if (!object[type]['_serializable_mandatory']) {
-      object[type]['_serializable_mandatory'] = [];
+    if (!object[className]['_serializable_mandatory']) {
+      object[className]['_serializable_mandatory'] = [];
     }
 
-    if (!object[type]['_serializable_nonserialized']) {
-      object[type]['_serializable_nonserialized'] = [];
+    if (!object[className]['_serializable_nonserialized']) {
+      object[className]['_serializable_nonserialized'] = [];
     }
 
-    if (!object[type]['_serializable_array']) {
-      object[type]['_serializable_array'] = [];
+    if (!object[className]['_serializable_array']) {
+      object[className]['_serializable_array'] = [];
     }
 
-    if (!object[type]['_serializable_complextype']) {
-      object[type]['_serializable_complextype'] = new Map();
+    if (!object[className]['_serializable_complextype']) {
+      object[className]['_serializable_complextype'] = new Map();
     }
 
-    if (!object[type]['_serializable_abstracttype']) {
-      object[type]['_serializable_abstracttype'] = new Map();
+    if (!object[className]['_serializable_abstracttype']) {
+      object[className]['_serializable_abstracttype'] = new Map();
     }
 
-    if (!object[type]['_serializable_typeimplementation']) {
-      object[type]['_serializable_typeimplementation'] = new Map();
+    if (!object[className]['_serializable_typeimplementation']) {
+      object[className]['_serializable_typeimplementation'] = new Map();
     }
   }
 
@@ -116,15 +117,17 @@ export class Serializer {
    */
   private static async getAbstractType(serializedData: any, property: any, newObject: any): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
-      const typeName = serializedData[newObject[newObject.constructor.name]['_serializable_abstracttype'].get(property)];
+      const newObjectClassName = `_serializable_${newObject.constructor.name}`;
+
+      const typeName = serializedData[newObject[newObjectClassName]['_serializable_abstracttype'].get(property)];
 
       if (!typeName) {
         reject(new SerializedObjectIncompleteError(
-            'abstract', serializedData, newObject[newObject.constructor.name]['_serializable_abstracttype'].get(property)));
+            'abstract', serializedData, newObject[newObjectClassName]['_serializable_abstracttype'].get(property)));
         return;
       }
 
-      const typeDefinition = newObject[newObject.constructor.name]['_serializable_typeimplementation'].get(typeName);
+      const typeDefinition = newObject[newObjectClassName]['_serializable_typeimplementation'].get(typeName);
 
       if (!typeDefinition) {
         reject(new UnknownTypeDefinitionError(typeName, serializedData));
@@ -156,9 +159,10 @@ export class Serializer {
 
       const newObject = new type();
 
+      const newObjectClassName = `_serializable_${type.name}`;
 
       // Check mandatory fields
-      newObject[type.name]['_serializable_mandatory'].forEach(property => {
+      newObject[newObjectClassName]['_serializable_mandatory'].forEach(property => {
         if (!serializedData[property]) {
           reject(new SerializedObjectIncompleteError(type.name, serializedData, property));
           return;
@@ -169,9 +173,9 @@ export class Serializer {
 
       // Assign values
       for (const property in serializedData) {
-        if (!newObject[type.name]['_serializable_nonserialized'].includes(property)) {
+        if (!newObject[newObjectClassName]['_serializable_nonserialized'].includes(property)) {
           let data = serializedData[property];
-          const isArray = newObject[type.name]['_serializable_array'].includes(property);
+          const isArray = newObject[newObjectClassName]['_serializable_array'].includes(property);
 
           if (isArray) {
             if (!Array.isArray(serializedData[property])) {
@@ -185,11 +189,11 @@ export class Serializer {
           }
 
           data.forEach(element => {
-            if (newObject[type.name]['_serializable_complextype'].get(property)) {
-              openPromises.push(this.deserialize(newObject[type.name]['_serializable_complextype'].get(property), element).then((obj) => {
+            if (newObject[newObjectClassName]['_serializable_complextype'].get(property)) {
+              openPromises.push(this.deserialize(newObject[newObjectClassName]['_serializable_complextype'].get(property), element).then((obj) => {
                 isArray ? newObject[property].push(obj) : newObject[property] = obj;
               }));
-            } else if (newObject[type.name]['_serializable_abstracttype'].get(property)) {
+            } else if (newObject[newObjectClassName]['_serializable_abstracttype'].get(property)) {
               openPromises.push(this.getAbstractType(element, property, newObject).then((obj) => {
                 isArray ? newObject[property].push(obj) : newObject[property] = obj;
               }));
@@ -258,22 +262,21 @@ export class Serializer {
       this.initEmptyArrays(object, object.constructor.name);
       this.copyInheritanceArrayContent(object, object.constructor.name);
       const serializedData: any = {};
-
       const openPromises = [];
+      const objectClassName = `_serializable_${object.constructor.name}`;
 
       // Iterate properties
       for (const property in object) {
-        if (!object[object.constructor.name]['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_') &&
-            property !== object.constructor.name) {
-          const isArray = object[object.constructor.name]['_serializable_array'].includes(property);
+        if (!object[objectClassName]['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_')) {
+          const isArray = object[objectClassName]['_serializable_array'].includes(property);
 
           // Crate Dummy array
           const data = isArray ? object[property] : [object[property]];
           serializedData[property] = isArray ? [] : undefined;
 
           data.forEach(element => {
-            if (object[object.constructor.name]['_serializable_complextype'].get(property) ||
-                object[object.constructor.name]['_serializable_abstracttype'].get(property)) {
+            if (object[objectClassName]['_serializable_complextype'].get(property) ||
+                object[objectClassName]['_serializable_abstracttype'].get(property)) {
               openPromises.push(this.serialize(element).then((obj) => {
                 isArray ? serializedData[property].push(obj) : serializedData[property] = obj;
               }));
