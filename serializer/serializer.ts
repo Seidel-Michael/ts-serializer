@@ -73,7 +73,7 @@ export class Serializer {
    */
   private static initEmptyArrays(object: any, type: string): void {
     const className = `_serializable_${type}`;
-    
+
     if (!object[className]) {
       object[className] = {};
     }
@@ -163,7 +163,7 @@ export class Serializer {
 
       // Check mandatory fields
       newObject[newObjectClassName]['_serializable_mandatory'].forEach(property => {
-        if (!serializedData.hasOwnProperty(property)) {
+        if (!serializedData.hasOwnProperty(property) || serializedData[property] === undefined) {
           reject(new SerializedObjectIncompleteError(type.name, serializedData, property));
           return;
         }
@@ -175,6 +175,13 @@ export class Serializer {
       for (const property in serializedData) {
         if (!newObject[newObjectClassName]['_serializable_nonserialized'].includes(property)) {
           let data = serializedData[property];
+
+          if(data === undefined)
+          {
+            newObject[property] = undefined;
+            continue;
+          }
+
           const isArray = newObject[newObjectClassName]['_serializable_array'].includes(property);
 
           if (isArray) {
@@ -275,7 +282,10 @@ export class Serializer {
           serializedData[property] = isArray ? [] : undefined;
 
           data.forEach(element => {
-            if (object[objectClassName]['_serializable_complextype'].get(property) ||
+            if (element === undefined) {
+              serializedData[property] = undefined;
+            } else if (
+                object[objectClassName]['_serializable_complextype'].get(property) ||
                 object[objectClassName]['_serializable_abstracttype'].get(property)) {
               openPromises.push(this.serialize(element).then((obj) => {
                 isArray ? serializedData[property].push(obj) : serializedData[property] = obj;

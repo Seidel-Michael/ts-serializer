@@ -262,12 +262,27 @@ describe('Serializer', () => {
           .to.be.rejectedWith(SerializedObjectIncompleteError);
     });
 
+    it('should reject with SerializedObjectIncompleteError if mandatory data is undefined', () => {
+      const testData = {test: 'IAmATest', mandatoryProperty: undefined};
+
+      return expect(Serializer.deserialize<TestClassMandatoryNoExclude>(TestClassMandatoryNoExclude, testData))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
     it('should resolve with deserialized complex object - valid input data', async () => {
       const testData = {test: 'IAmATest', complex: {mandatoryProperty: 'xyz'}};
 
       const result = await Serializer.deserialize<TestClassNoMandatoryNoExcludeComplex>(TestClassNoMandatoryNoExcludeComplex, testData);
       expect(result).to.include({test: 'IAmATest'});
       expect(result.complex).to.include({mandatoryProperty: 'xyz', test: 'Test123'});
+    });
+
+    it('should resolve with deserialized complex object - undefined', async () => {
+      const testData = {test: 'IAmATest', complex: undefined};
+
+      const result = await Serializer.deserialize<TestClassNoMandatoryNoExcludeComplex>(TestClassNoMandatoryNoExcludeComplex, testData);
+      expect(result).to.include({test: 'IAmATest'});
+      expect(result.complex).to.equal(undefined);
     });
 
     it('should reject with SerializedObjectIncompleteError if data of complex type is missing - invalid input data', () => {
@@ -307,6 +322,14 @@ describe('Serializer', () => {
       expect(result.abstractType.mandatoryProperty).to.equal('IAmThere');
     });
 
+    it('should resolve with deserialized abstract object - undefined', async () => {
+      const testData = {test: 'IAmATest', abstractType: undefined};
+
+      const result = await Serializer.deserialize<TestClassAbstractTypeNoMandatoryNoExclude>(TestClassAbstractTypeNoMandatoryNoExclude, testData);
+      expect(result.test).to.equal('IAmATest');
+      expect(result.abstractType).to.equal(undefined);
+    });
+
     it('should reject with SerializedDataIsNotAnArrayError if complex array type is not an array', () => {
       const testData = {complexTypeArray: 'abc'};
 
@@ -338,6 +361,14 @@ describe('Serializer', () => {
       expect(result.complexTypeArray[0].test).to.equal('IAmATest');
     });
 
+    it('should resolve with deserialized complex array if input data is undefined', async () => {
+      const testData = {complexTypeArray: undefined};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.complexTypeArray).to.equal(undefined);
+    });
+
     it('should resolve with deserialized abstract array if input data is valid', async () => {
       const testData = {abstractTypeArray: [{test: 'IAmATest', typeDef: 'testType'}, {test: 'IAmATest', typeDef: 'testTypeB'}]};
 
@@ -349,6 +380,14 @@ describe('Serializer', () => {
       expect(result.abstractTypeArray[0].test).to.equal('IAmATest');
     });
 
+    it('should resolve with deserialized abstract array if input data is undefined', async () => {
+      const testData = {abstractTypeArray: undefined};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.abstractTypeArray).to.equal(undefined);
+    });
+
     it('should resolve with deserialized simple array if input data is valid', async () => {
       const testData = {simpleArray: ['testA', 'testB']};
 
@@ -357,6 +396,14 @@ describe('Serializer', () => {
       expect(result.simpleArray.length).to.equal(2);
       expect(result.simpleArray[0]).to.equal('testA');
       expect(result.simpleArray[1]).to.equal('testB');
+    });
+
+    it('should resolve with deserialized simple array if input data is undefined', async () => {
+      const testData = {simpleArray: undefined};
+
+      const result = await Serializer.deserialize<TestClassArrayNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData);
+
+      expect(result.simpleArray).to.equal(undefined);
     });
 
   });
@@ -471,6 +518,15 @@ describe('Serializer', () => {
           .to.eventually.deep.equal({test: 'IAmATest', complex: {test: 'IAmATestToo', mandatoryProperty: 'IAmJustAnotherTest'}});
     });
 
+    it('should resolve with valid serialized complex object - undefined', () => {
+      const object = new TestClassNoMandatoryNoExcludeComplex();
+      object.test = 'IAmATest';
+      object.complex = undefined;
+
+      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', complex: undefined});
+    });
+
     it('should resolve with valid serialized abstract object - exclude', () => {
       const object = new TestClassAbstractTypeNoMandatoryNoExclude();
       object.test = 'IAmATest';
@@ -481,6 +537,15 @@ describe('Serializer', () => {
 
       return expect(Serializer.serialize<TestClassAbstractTypeNoMandatoryNoExclude>(object))
           .to.eventually.deep.equal({test: 'IAmATest', abstractType: {test: 'IAmATestToo', typeDef: 'IAmTheType'}});
+    });
+
+    it('should resolve with valid serialized abstract object - undefined', () => {
+      const object = new TestClassAbstractTypeNoMandatoryNoExclude();
+      object.test = 'IAmATest';
+      object.abstractType = undefined;
+
+      return expect(Serializer.serialize<TestClassAbstractTypeNoMandatoryNoExclude>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', abstractType: undefined});
     });
 
     it('should resolve with valid serialized array object - exclude', () => {
