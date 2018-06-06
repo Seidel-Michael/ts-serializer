@@ -183,6 +183,42 @@ class TestClass implements Serializable {
 Serializer.deserializeFile<TestClass>(TestClass, 'test.json').then((obj) => { JSON.stringify(obj); });
 ```
 
+### deserializeAbstract
+```ts
+ /**
+   * Deserializes an abstract object from the serialized data.
+   *
+   * @static
+   * @template T The abstract type.
+   * @param {*} containerType An container type with the TypeImplementation info.
+   * @param {*} serializedData The serialized data.
+   * @param {string} typeProperty The name of the property that specifies the type.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data or
+   * is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeAbstract<T extends Serializable>(containerType: any, serializedData: any, typeProperty: string): Promise<T>
+```
+
+#### Example
+```ts
+import {Serializer} from './serializer';
+import {Serializable, Mandatory, NonSerialized} from './serializable';
+
+@AddTypeImplementation('testTypeA', MyTypeA)
+@AddTypeImplementation('testTypeB', MyTypeB)
+class TestClass implements Serializable {
+  
+  @AbstractType('type')
+  abstract: MyAbstractType;
+}
+
+const input {type: 'testTypeB'};
+
+Serializer.deserializeAbstract<MyAbstractType>(TestClass, input, 'type').then((obj) => { JSON.stringify(obj); });
+```
+
 ### serialize
 ```ts
 /**

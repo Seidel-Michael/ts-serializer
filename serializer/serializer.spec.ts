@@ -463,6 +463,37 @@ describe('Serializer', () => {
     });
   });
 
+  describe('deserializeAbstract', () => {
+    it('should reject with UnknownTypeDefinition if abstract type is not defined in containerType', () => {
+      const testData = {typeDef: 'testTypeNotDefined', mandatoryProperty: 'IAmThere'};
+
+      return expect(Serializer.deserializeAbstract<any>(TestClassAbstractTypeNoMandatoryNoExclude, testData, 'typeDef'))
+          .to.be.rejectedWith(UnknownTypeDefinitionError);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if type definition property is missing in input', () => {
+      const testData = {mandatoryProperty: 'IAmThere'};
+
+      return expect(Serializer.deserializeAbstract<any>(TestClassAbstractTypeNoMandatoryNoExclude, testData, 'typeDef'))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if property of abstract type is missing in input data', () => {
+      const testData = {typeDef: 'testTypeB'};
+
+      return expect(Serializer.deserializeAbstract<any>(TestClassAbstractTypeNoMandatoryNoExclude, testData, 'typeDef'))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should resolve with deserialized abstract object - valid input data', async () => {
+      const testData = {typeDef: 'testType', mandatoryProperty: 'IAmThere'};
+
+      const result = await Serializer.deserializeAbstract<any>(TestClassAbstractTypeNoMandatoryNoExclude, testData, 'typeDef');
+      expect(result).to.be.instanceof(TestClassAbstractImplementation);
+      expect(result.mandatoryProperty).to.equal('IAmThere');
+    });
+  });
+
   describe('serialize inheritance', () => {
     it('should resolve with valid serialized object', () => {
       const object = new TestClassInheritanceNew();
@@ -490,6 +521,7 @@ describe('Serializer', () => {
       });
     });
   });
+
 
   describe('serialize', () => {
     it('should resolve with valid serialized object - no exclude', () => {

@@ -139,6 +139,44 @@ export class Serializer {
   }
 
   /**
+   * Deserializes an abstract object from the serialized data.
+   *
+   * @static
+   * @template T The abstract type.
+   * @param {*} containerType An container type with the TypeImplementation info.
+   * @param {*} serializedData The serialized data.
+   * @param {string} typeProperty The name of the property that specifies the type.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data or
+   * is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeAbstract<T extends Serializable>(containerType: any, serializedData: any, typeProperty: string): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+
+      // Init empty arrays
+      this.initEmptyArrays(containerType.prototype, containerType.name);
+      this.copyInheritanceArrayContent(containerType.prototype, containerType.name);
+
+      const typeName = serializedData[typeProperty];
+
+      if (!typeName) {
+        reject(new SerializedObjectIncompleteError('abstract', serializedData, typeProperty));
+        return;
+      }
+
+      const typeDefinition = containerType.prototype[`_serializable_${containerType.name}`]['_serializable_typeimplementation'].get(typeName);
+
+      if (!typeDefinition) {
+        reject(new UnknownTypeDefinitionError(typeName, serializedData));
+        return;
+      }
+
+      this.deserialize(typeDefinition, serializedData).then(resolve).catch(reject);
+    });
+  }
+
+  /**
    * Deserializes an object from serialized data.
    *
    * @static
@@ -176,8 +214,7 @@ export class Serializer {
         if (!newObject[newObjectClassName]['_serializable_nonserialized'].includes(property)) {
           let data = serializedData[property];
 
-          if(data === undefined)
-          {
+          if (data === undefined) {
             newObject[property] = undefined;
             continue;
           }
