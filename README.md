@@ -183,6 +183,50 @@ class TestClass implements Serializable {
 Serializer.deserializeFile<TestClass>(TestClass, 'test.json').then((obj) => { JSON.stringify(obj); });
 ```
 
+### deserializeProperty
+```ts
+/**
+   * Deserializes one property of an object.
+   *
+   * @static
+   * @template T The type of the property.
+   * @param {*} type The type of the container object.
+   * @param {*} serializedData The serialized data.
+   * @param {string} propertyName The name of the property to deserialize.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeProperty<T extends Serializable>(type: any, serializedData: any, propertyName: string): Promise<T>
+```
+
+#### Example
+```ts
+import {Serializer} from './serializer';
+import {Serializable, Mandatory, NonSerialized} from './serializable';
+
+class TestClass implements Serializable {
+  @Mandatory
+  testString: string;
+
+  @NonSerialized
+  testNumber: number;
+
+  testArray: [];
+
+  constructor() {
+    this.testString = 'Test123';
+    this.testNumber = 42;
+    this.testArray = ['Abc', 'Cde'];
+  }
+}
+
+const input {testString: 'I am a test!'};
+
+Serializer.deserializeProperty<string>(TestClass, input, 'testString').then((obj) => { console.log(obj); });
+```
+
 ### deserializeAbstract
 ```ts
  /**

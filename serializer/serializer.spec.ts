@@ -202,6 +202,64 @@ describe('Serializer', () => {
     });
   });
 
+  describe('deserializeProperty', () => {
+    it('should resolve with deserialized property - string type', () => {
+      const testData = {test: 'IAmATest'};
+
+      return expect(Serializer.deserializeProperty<string>(TestClassNoMandatoryNoExclude, testData, 'test')).to.eventually.equal('IAmATest');
+    });
+
+    it('should resolve with deserialized object complex - TestClassMandatoryExclude', async () => {
+      const testData = {complex: {mandatoryProperty: 'abc'}};
+
+      const result = await Serializer.deserializeProperty<TestClassMandatoryExclude>(TestClassNoMandatoryNoExcludeComplex, testData, 'complex');
+
+      expect(result).to.be.instanceof(TestClassMandatoryExclude);
+      expect(result.mandatoryProperty).to.equal('abc');
+    });
+
+    it('should resolve with deserialized object abstract - TestClassAbstractImplementation', async () => {
+      const testData = {abstractType: {typeDef: 'testType'}};
+
+      const result =
+          await Serializer.deserializeProperty<TestClassAbstractImplementation>(TestClassAbstractTypeNoMandatoryNoExclude, testData, 'abstractType');
+
+      expect(result).to.be.instanceof(TestClassAbstractImplementation);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if property in data is missing', () => {
+      const testData = {};
+
+      return expect(Serializer.deserializeProperty<TestClassMandatoryExclude>(TestClassNoMandatoryNoExclude, testData, 'complex'))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should reject with SerializedObjectIncompleteError if mandatory data is undefined', () => {
+      const testData = {complex: {test: 'IAmATest', mandatoryProperty: undefined}};
+
+      return expect(Serializer.deserializeProperty<TestClassMandatoryNoExclude>(TestClassNoMandatoryNoExcludeComplex, testData, 'complex'))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+
+    it('should reject with SerializedDataIsNotAnArrayError if simple array type is not an array', () => {
+      const testData = {simpleArray: 'abc'};
+
+      return expect(Serializer.deserializeProperty<any>(TestClassArrayNoMandatoryNoExclude, testData, 'simpleArray'))
+          .to.be.rejectedWith(SerializedDataIsNotAnArrayError);
+    });
+
+    it('should resolve with deserialized simple array if input data is valid', async () => {
+      const testData = {simpleArray: ['testA', 'testB']};
+
+      const result = await Serializer.deserializeProperty<any>(TestClassArrayNoMandatoryNoExclude, testData, 'simpleArray');
+
+      expect(result.length).to.equal(2);
+      expect(result[0]).to.equal('testA');
+      expect(result[1]).to.equal('testB');
+    });
+
+  });
+
   describe('deserialize', () => {
     it('should resolve with deserialized object - no input data, no mandatory, no exclude', () => {
       const testData = {};

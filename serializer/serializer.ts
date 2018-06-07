@@ -23,10 +23,9 @@ export class Serializer {
   private static copyInheritanceArrayContent(object: any, type: string): void {
     let proto = Object.getPrototypeOf(object);
     const className = `_serializable_${type}`;
-    let protoName = `_serializable_${proto.constructor.name}`;
 
     while (proto) {
-      protoName = `_serializable_${proto.constructor.name}`;
+      const protoName = `_serializable_${proto.constructor.name}`;
       if (proto[protoName]) {
         if (proto[protoName]['_serializable_mandatory']) {
           object[className]['_serializable_mandatory'].push.apply(
@@ -115,19 +114,17 @@ export class Serializer {
    * @returns {Promise<any>}
    * @memberof Serializer
    */
-  private static async getAbstractType(serializedData: any, property: any, newObject: any): Promise<any> {
+  private static async getAbstractType(serializedData: any, property: any, serializerArrays: any): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
-      const newObjectClassName = `_serializable_${newObject.constructor.name}`;
 
-      const typeName = serializedData[newObject[newObjectClassName]['_serializable_abstracttype'].get(property)];
+      const typeName = serializedData[serializerArrays['_serializable_abstracttype'].get(property)];
 
       if (!typeName) {
-        reject(new SerializedObjectIncompleteError(
-            'abstract', serializedData, newObject[newObjectClassName]['_serializable_abstracttype'].get(property)));
+        reject(new SerializedObjectIncompleteError('abstract', serializedData, serializerArrays['_serializable_abstracttype'].get(property)));
         return;
       }
 
-      const typeDefinition = newObject[newObjectClassName]['_serializable_typeimplementation'].get(typeName);
+      const typeDefinition = serializerArrays['_serializable_typeimplementation'].get(typeName);
 
       if (!typeDefinition) {
         reject(new UnknownTypeDefinitionError(typeName, serializedData));
@@ -177,6 +174,72 @@ export class Serializer {
   }
 
   /**
+   * Deserializes one property of an object.
+   *
+   * @static
+   * @template T The type of the property.
+   * @param {*} type The type of the container object.
+   * @param {*} serializedData The serialized data.
+   * @param {string} propertyName The name of the property to deserialize.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeProperty<T extends Serializable>(type: any, serializedData: any, propertyName: string): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+      // Init empty arrays
+      this.initEmptyArrays(type.prototype, type.name);
+      this.copyInheritanceArrayContent(type.prototype, type.name);
+
+      let newObject;
+
+      const typeClassName = `_serializable_${type.name}`;
+
+      if (!type.prototype[typeClassName]['_serializable_nonserialized'].includes(propertyName)) {
+        let data = serializedData[propertyName];
+
+        if (data === undefined) {
+          reject(new SerializedObjectIncompleteError(type.name, serializedData, propertyName));
+          return;
+        }
+
+        const isArray = type.prototype[typeClassName]['_serializable_array'].includes(propertyName);
+
+        if (isArray) {
+          if (!Array.isArray(serializedData[propertyName])) {
+            reject(new SerializedDataIsNotAnArrayError(propertyName, serializedData));
+            return;
+          }
+          newObject = [];
+        } else {
+          // Create a dummy array.
+          data = [serializedData[propertyName]];
+        }
+
+        const openPromises = [];
+
+        data.forEach(element => {
+          if (type.prototype[typeClassName]['_serializable_complextype'].get(propertyName)) {
+            openPromises.push(this.deserialize(type.prototype[typeClassName]['_serializable_complextype'].get(propertyName), element).then((obj) => {
+              isArray ? newObject.push(obj) : newObject = obj;
+            }));
+          } else if (type.prototype[typeClassName]['_serializable_abstracttype'].get(propertyName)) {
+            openPromises.push(this.getAbstractType(element, propertyName, type.prototype[typeClassName]).then((obj) => {
+              isArray ? newObject.push(obj) : newObject = obj;
+            }));
+          } else {
+            isArray ? newObject.push(element) : newObject = element;
+          }
+        });
+
+        await Promise.all(openPromises).catch(reject);
+        resolve(newObject);
+      }
+    });
+  }
+
+  /**
    * Deserializes an object from serialized data.
    *
    * @static
@@ -212,39 +275,14 @@ export class Serializer {
       // Assign values
       for (const property in serializedData) {
         if (!newObject[newObjectClassName]['_serializable_nonserialized'].includes(property)) {
-          let data = serializedData[property];
-
-          if (data === undefined) {
+          if (serializedData[property] === undefined) {
             newObject[property] = undefined;
             continue;
           }
 
-          const isArray = newObject[newObjectClassName]['_serializable_array'].includes(property);
-
-          if (isArray) {
-            if (!Array.isArray(serializedData[property])) {
-              reject(new SerializedDataIsNotAnArrayError(property, serializedData));
-              return;
-            }
-            newObject[property] = [];
-          } else {
-            // Create a dummy array.
-            data = [serializedData[property]];
-          }
-
-          data.forEach(element => {
-            if (newObject[newObjectClassName]['_serializable_complextype'].get(property)) {
-              openPromises.push(this.deserialize(newObject[newObjectClassName]['_serializable_complextype'].get(property), element).then((obj) => {
-                isArray ? newObject[property].push(obj) : newObject[property] = obj;
-              }));
-            } else if (newObject[newObjectClassName]['_serializable_abstracttype'].get(property)) {
-              openPromises.push(this.getAbstractType(element, property, newObject).then((obj) => {
-                isArray ? newObject[property].push(obj) : newObject[property] = obj;
-              }));
-            } else {
-              isArray ? newObject[property].push(element) : newObject[property] = element;
-            }
-          });
+          openPromises.push(this.deserializeProperty(type, serializedData, property).then((result) => {
+            newObject[property] = result;
+          }));
         }
       }
 
