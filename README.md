@@ -227,6 +227,50 @@ const input {testString: 'I am a test!'};
 Serializer.deserializeProperty<string>(TestClass, input, 'testString').then((obj) => { console.log(obj); });
 ```
 
+### deserializeArrayItem
+```ts
+/**
+   * Deserializes an item based on an array definition.
+   *
+   * @static
+   * @template T The deserialized type.
+   * @param {*} type The container type.
+   * @param {*} serializedData The serialized data.
+   * @param {string} propertyName The name of the array property used as the definition.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeArrayItem<T extends Serializable>(type: any, serializedData: any, propertyName: string): Promise<T>
+```
+
+#### Example
+```ts
+import {Serializer} from './serializer';
+import {Serializable, Mandatory, NonSerialized} from './serializable';
+
+class TestClass implements Serializable {
+  @Mandatory
+  testString: string;
+
+  @NonSerialized
+  testNumber: number;
+
+  testArray: ComplexType[];
+
+  constructor() {
+    this.testString = 'Test123';
+    this.testNumber = 42;
+    this.testArray = [{test: 'Abc'}, {test: 'Cde'}];
+  }
+}
+
+const input {test: 'I am a test!'};
+
+Serializer.deserializeArrayItem<ComplexType>(TestClass, input, 'testArray').then((obj) => { console.log(obj); });
+```
+
 ### deserializeAbstract
 ```ts
  /**

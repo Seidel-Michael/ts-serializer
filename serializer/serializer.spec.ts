@@ -260,6 +260,36 @@ describe('Serializer', () => {
 
   });
 
+  describe('deserializeArrayItem', () => {
+    it('should resolved with deserialized complex item - TestClassArrayNoMandatoryNoExclude', async () => {
+      const testData = {test: 'abc'};
+
+      const result =
+          await Serializer.deserializeArrayItem<TestClassNoMandatoryNoExclude>(TestClassArrayNoMandatoryNoExclude, testData, 'complexTypeArray');
+
+      expect(result).to.be.instanceof(TestClassNoMandatoryNoExclude);
+      expect(result.test).to.equal('abc');
+    });
+
+    it('should resolve with deserialized item abstract - TestClassAbstractImplementation', async () => {
+      const testData = {typeDef: 'testType'};
+
+      const result =
+          await Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'abstractTypeArray');
+
+      expect(result).to.be.instanceof(TestClassAbstractImplementation);
+      expect(result.typeDef).to.equal('testType');
+    });
+
+    it('should reject with SerializedObjectIncompleteError if mandatory data is undefined', async () => {
+      const testData = {};
+
+      return expect(
+                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'abstractTypeArray'))
+          .to.be.rejectedWith(SerializedObjectIncompleteError);
+    });
+  });
+
   describe('deserialize', () => {
     it('should resolve with deserialized object - no input data, no mandatory, no exclude', () => {
       const testData = {};

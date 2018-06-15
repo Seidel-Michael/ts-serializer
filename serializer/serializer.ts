@@ -131,6 +131,8 @@ export class Serializer {
         return;
       }
 
+      console.log(typeDefinition);
+      console.log(serializedData);
       this.deserialize(typeDefinition, serializedData).then(resolve).catch(reject);
     });
   }
@@ -170,6 +172,47 @@ export class Serializer {
       }
 
       this.deserialize(typeDefinition, serializedData).then(resolve).catch(reject);
+    });
+  }
+
+  /**
+   * Deserializes an item based on an array definition.
+   *
+   * @static
+   * @template T The deserialized type.
+   * @param {*} type The container type.
+   * @param {*} serializedData The serialized data.
+   * @param {string} propertyName The name of the array property used as the definition.
+   * @returns {Promise<T>} Returns a promise resolving with the deserialize object
+   * or rejecting with a SerializedObjectIncompleteError if a mandatory property is missing in the serialized data.
+   * If the property is marked as abstract the promise is rejected with UnknownTypeDefinitionError if the defined type could not be found.
+   * @memberof Serializer
+   */
+  static deserializeArrayItem<T extends Serializable>(type: any, serializedData: any, propertyName: string): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+      // Init empty arrays
+      this.initEmptyArrays(type.prototype, type.name);
+      this.copyInheritanceArrayContent(type.prototype, type.name);
+
+      let newObject;
+
+      const typeClassName = `_serializable_${type.name}`;
+
+      try {
+        if (type.prototype[typeClassName]['_serializable_complextype'].get(propertyName)) {
+          await this.deserialize(type.prototype[typeClassName]['_serializable_complextype'].get(propertyName), serializedData).then((obj) => {
+            newObject = obj;
+          });
+        } else if (type.prototype[typeClassName]['_serializable_abstracttype'].get(propertyName)) {
+          await this.getAbstractType(serializedData, propertyName, type.prototype[typeClassName]).then((obj) => {
+            newObject = obj;
+          });
+        }
+      } catch (error) {
+        reject(error);
+      }
+
+      resolve(newObject);
     });
   }
 
