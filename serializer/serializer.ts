@@ -258,23 +258,24 @@ export class Serializer {
           data = [serializedData[propertyName]];
         }
 
-        const openPromises = [];
-
-        data.forEach(element => {
+        for (const element of data) {
           if (type.prototype[typeClassName]['_serializable_complextype'].get(propertyName)) {
-            openPromises.push(this.deserialize(type.prototype[typeClassName]['_serializable_complextype'].get(propertyName), element).then((obj) => {
-              isArray ? newObject.push(obj) : newObject = obj;
-            }));
+            await this.deserialize(type.prototype[typeClassName]['_serializable_complextype'].get(propertyName), element)
+                .then((obj) => {
+                  isArray ? newObject.push(obj) : newObject = obj;
+                })
+                .catch(reject);
           } else if (type.prototype[typeClassName]['_serializable_abstracttype'].get(propertyName)) {
-            openPromises.push(this.getAbstractType(element, propertyName, type.prototype[typeClassName]).then((obj) => {
-              isArray ? newObject.push(obj) : newObject = obj;
-            }));
+            await this.getAbstractType(element, propertyName, type.prototype[typeClassName])
+                .then((obj) => {
+                  isArray ? newObject.push(obj) : newObject = obj;
+                })
+                .catch(reject);
           } else {
             isArray ? newObject.push(element) : newObject = element;
           }
-        });
+        }
 
-        await Promise.all(openPromises).catch(reject);
         resolve(newObject);
       }
     });
@@ -371,6 +372,21 @@ export class Serializer {
   }
 
   /**
+   * Determines if a property is not non serialized and not a system _serializable_ proeprty.
+   *
+   * @private
+   * @static
+   * @param {*} object The container object.
+   * @param {string} className The name of the class
+   * @param {string} property The name of the property to check.
+   * @returns {boolean} true if the property is serialized; otherwise false.
+   * @memberof Serializer
+   */
+  private static isSerialized(object: any, className: string, property: string): boolean {
+    return !object[className]['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_');
+  }
+
+  /**
    * Serializes the object to serialized data.
    *
    * @static
@@ -384,47 +400,56 @@ export class Serializer {
       // Init empty array
       this.initEmptyArrays(object, object.constructor.name);
       this.copyInheritanceArrayContent(object, object.constructor.name);
-      let serializedData: any = {};
-      const openPromises = [];
       const objectClassName = `_serializable_${object.constructor.name}`;
       const isTopLevelArray = Array.isArray(object);
-      if(isTopLevelArray)
-      {
-        serializedData = [];
-      }
+      const serializedData: any = isTopLevelArray ? [] : {};
 
       // Iterate properties
       for (const property in object) {
-        if (!object[objectClassName]['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_')) {
+        if (this.isSerialized(object, objectClassName, property)) {
           const isArray = object[objectClassName]['_serializable_array'].includes(property);
-          let serializeDataTemp;
 
           // Crate Dummy array
           const data = isArray ? object[property] : [object[property]];
-          serializeDataTemp = isArray ? [] : undefined;
+          // serializeDataTemp = isArray ? [] : undefined;
+          const isComplexOrAbstractProperty = object[objectClassName]['_serializable_complextype'].get(property) ||
+              object[objectClassName]['_serializable_abstracttype'].get(property);
+          let serializeDataTemp: any = isArray ? [] : undefined;
 
-          data.forEach(element => {
-            if (element === undefined) {
-              serializeDataTemp = undefined;
-              isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
-            } else if (
-                object[objectClassName]['_serializable_complextype'].get(property) ||
-                object[objectClassName]['_serializable_abstracttype'].get(property)) {
-              openPromises.push(this.serialize(element).then((obj) => {
-                isArray ? serializeDataTemp.push(obj) : serializeDataTemp = obj;
-                isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
-              }));
-            } else {
-              isArray ? serializeDataTemp.push(element) : serializeDataTemp = element;
-              isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
-            }
-          });
+          for (const element of data) {
+            serializeDataTemp = await this.serializeElement(element, serializeDataTemp, isArray, isComplexOrAbstractProperty);
+          }
+          isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
         }
       }
 
-      await Promise.all(openPromises).catch(reject);
       resolve(serializedData);
     });
+  }
+
+  /**
+   * Serializes an element.
+   *
+   * @private
+   * @static
+   * @param {*} element The element to serialize.
+   * @param {*} serializedData The input/output data.
+   * @param {boolean} isArray true if the element is part of an array.
+   * @param {boolean} isComplexOrAbstractProperty true if the type is abstract or complex.
+   * @returns {Promise<any>} Returns the serialized data.
+   * @memberof Serializer
+   */
+  private static async serializeElement(element: any, serializedData: any, isArray: boolean, isComplexOrAbstractProperty: boolean): Promise<any> {
+    if (element === undefined) {
+      serializedData = undefined;
+    } else if (isComplexOrAbstractProperty) {
+      const obj = await this.serialize(element);
+      isArray ? serializedData.push(obj) : serializedData = obj;
+    } else {
+      isArray ? serializedData.push(element) : serializedData = element;
+    }
+
+    return serializedData;
   }
 
   /**
