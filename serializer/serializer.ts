@@ -1,4 +1,5 @@
 import * as fs from 'fs-extra';
+import * as _ from 'lodash';
 
 import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
 import {SerializedDataIsNotAnArrayError, SerializedObjectIncompleteError, UnknownTypeDefinitionError} from './errors';
@@ -28,17 +29,18 @@ export class Serializer {
       const protoName = `_serializable_${proto.constructor.name}`;
       if (proto[protoName]) {
         if (proto[protoName]['_serializable_mandatory']) {
-          object[className]['_serializable_mandatory'].push.apply(
-              object[className]['_serializable_mandatory'], proto[protoName]['_serializable_mandatory']);
+          object[className]['_serializable_mandatory'] =
+              _.union(object[className]['_serializable_mandatory'], proto[protoName]['_serializable_mandatory']);
         }
 
         if (proto[protoName]['_serializable_nonserialized']) {
-          object[className]['_serializable_nonserialized'].push.apply(
-              object[className]['_serializable_nonserialized'], proto[protoName]['_serializable_nonserialized']);
+          object[className]['_serializable_nonserialized'] =
+              _.union(object[className]['_serializable_nonserialized'], proto[protoName]['_serializable_nonserialized']);
         }
 
         if (proto[protoName]['_serializable_array']) {
-          object[className]['_serializable_array'].push.apply(object[className]['_serializable_array'], proto[protoName]['_serializable_array']);
+          object[className]['_serializable_array'] =
+              _.union(object[className]['_serializable_array'], proto[protoName]['_serializable_array']);
         }
 
         if (proto[protoName]['_serializable_complextype']) {
