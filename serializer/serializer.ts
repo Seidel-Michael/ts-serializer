@@ -384,30 +384,39 @@ export class Serializer {
       // Init empty array
       this.initEmptyArrays(object, object.constructor.name);
       this.copyInheritanceArrayContent(object, object.constructor.name);
-      const serializedData: any = {};
+      let serializedData: any = {};
       const openPromises = [];
       const objectClassName = `_serializable_${object.constructor.name}`;
+      const isTopLevelArray = Array.isArray(object);
+      if(isTopLevelArray)
+      {
+        serializedData = [];
+      }
 
       // Iterate properties
       for (const property in object) {
         if (!object[objectClassName]['_serializable_nonserialized'].includes(property) && !property.startsWith('_serializable_')) {
           const isArray = object[objectClassName]['_serializable_array'].includes(property);
+          let serializeDataTemp;
 
           // Crate Dummy array
           const data = isArray ? object[property] : [object[property]];
-          serializedData[property] = isArray ? [] : undefined;
+          serializeDataTemp = isArray ? [] : undefined;
 
           data.forEach(element => {
             if (element === undefined) {
-              serializedData[property] = undefined;
+              serializeDataTemp = undefined;
+              isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
             } else if (
                 object[objectClassName]['_serializable_complextype'].get(property) ||
                 object[objectClassName]['_serializable_abstracttype'].get(property)) {
               openPromises.push(this.serialize(element).then((obj) => {
-                isArray ? serializedData[property].push(obj) : serializedData[property] = obj;
+                isArray ? serializeDataTemp.push(obj) : serializeDataTemp = obj;
+                isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
               }));
             } else {
-              isArray ? serializedData[property].push(element) : serializedData[property] = element;
+              isArray ? serializeDataTemp.push(element) : serializeDataTemp = element;
+              isTopLevelArray ? serializedData.push(serializeDataTemp) : serializedData[property] = serializeDataTemp;
             }
           });
         }

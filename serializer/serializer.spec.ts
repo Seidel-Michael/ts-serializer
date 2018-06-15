@@ -610,8 +610,18 @@ describe('Serializer', () => {
     });
   });
 
-
   describe('serialize', () => {
+    it('should resolve with valid serialized object - root level array', async () => {
+      const object = new TestClassMandatoryNoExclude();
+      object.mandatoryProperty = 'test';
+      const objectB = new TestClassMandatoryNoExclude();
+      objectB.mandatoryProperty = 'abc';
+      const array = [object, objectB];
+
+      const result = await Serializer.serialize<TestClassMandatoryNoExclude>(array);
+      expect(Array.isArray(result)).to.be.true;
+    });
+
     it('should resolve with valid serialized object - no exclude', () => {
       const object = new TestClassMandatoryNoExclude();
       object.mandatoryProperty = 'test';
