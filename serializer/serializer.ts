@@ -131,8 +131,6 @@ export class Serializer {
         return;
       }
 
-      console.log(typeDefinition);
-      console.log(serializedData);
       this.deserialize(typeDefinition, serializedData).then(resolve).catch(reject);
     });
   }

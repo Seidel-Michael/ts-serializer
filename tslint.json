@@ -115,6 +115,7 @@
     "cyclomatic-complexity": [
       true,
       10
-    ]
+    ],
+    "no-console": true
   }
 }
