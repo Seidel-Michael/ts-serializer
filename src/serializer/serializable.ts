@@ -59,6 +59,11 @@ export function Mandatory(target: any, key: string): void {
  */
 export function ComplexType(type: any): (target: any, key: string) => void {
   return (target: any, key: string): void => {
+    if(type === undefined)
+    {
+      throw new ReferenceError(`Invalid ComplexType definition of ${target.constructor.name}. Type can not be null.`);
+    }
+
     if (!target[`_serializable_${target.constructor.name}`]) {
       target[`_serializable_${target.constructor.name}`] = {};
     }
@@ -101,6 +106,11 @@ export function ArrayType(target: any, key: string): void {
  */
 export function AddTypeImplementation(typeName: string, type: any): (ctor: Function) => void {
   return (ctor: Function) => {
+    if(type === undefined)
+    {
+      throw new ReferenceError(`Invalid AddTypeImplementation definition of ${typeName}. Type can not be null.`);
+    }
+
     if (!ctor.prototype[`_serializable_${ctor.name}`]) {
       ctor.prototype[`_serializable_${ctor.name}`] = {};
     }

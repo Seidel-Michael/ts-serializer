@@ -91,6 +91,14 @@ describe('Serializable decorators', () => {
 
       expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].size).to.equal(2);
     });
+
+    it('should throw ReferenceError if type is undefined', () => {
+      const target = {};
+
+      expect(() => {
+        ComplexType(undefined)(target, 'abc');
+      }).to.throw(ReferenceError);
+    });
   });
 
   describe('NonSerialized', () => {
@@ -143,6 +151,12 @@ describe('Serializable decorators', () => {
       AddTypeImplementation('abc', String)(Number);
 
       expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].size).to.equal(2);
+    });
+
+    it('should throw ReferenceError if type is undefined', () => {
+      expect(() => {
+        AddTypeImplementation('abc', undefined)(Number);
+      }).to.throw(ReferenceError);
     });
   });
 
