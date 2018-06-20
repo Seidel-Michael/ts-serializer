@@ -16,14 +16,6 @@ export class FileNotFoundError extends Error {
   file: string;
 
   /**
-   * The current directory of the application.
-   *
-   * @type {string}
-   * @memberof FileNotFoundError
-   */
-  currentDir: string;
-
-  /**
    * Creates an instance of FileNotFoundError.
    * @param {string} file The full path to the missing file.
    * @memberof FileNotFoundError
@@ -33,8 +25,7 @@ export class FileNotFoundError extends Error {
 
     this.name = this.constructor.name;
     this.file = file;
-    this.currentDir = __dirname;
 
-    Error.captureStackTrace(this, this.constructor);
+    (Error as any).captureStackTrace(this, this.constructor);
   }
 }

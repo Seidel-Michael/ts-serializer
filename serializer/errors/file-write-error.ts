@@ -35,6 +35,6 @@ export class FileWriteError extends Error {
       this.file = file;
       this.innerError = innerError;
   
-      Error.captureStackTrace(this, this.constructor);
+      (Error as any).captureStackTrace(this, this.constructor);
     }
   }

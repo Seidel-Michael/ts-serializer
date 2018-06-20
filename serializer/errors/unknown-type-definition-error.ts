@@ -35,6 +35,6 @@ export class UnknownTypeDefinitionError extends Error {
     this.unknownType = unknownType;
     this.serializedData = serializedData;
 
-    Error.captureStackTrace(this, this.constructor);
+    (Error as any).captureStackTrace(this, this.constructor);
   }
 }

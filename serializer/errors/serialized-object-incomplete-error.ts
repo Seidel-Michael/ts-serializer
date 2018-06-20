@@ -45,6 +45,6 @@ export class SerializedObjectIncompleteError extends Error {
     this.serializedData = serializedData;
     this.targetType = targetType;
 
-    Error.captureStackTrace(this, this.constructor);
+    (Error as any).captureStackTrace(this, this.constructor);
   }
 }

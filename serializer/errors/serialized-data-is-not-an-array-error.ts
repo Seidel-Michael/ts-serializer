@@ -35,6 +35,6 @@ export class SerializedDataIsNotAnArrayError extends Error {
     this.invalidProperty = invalidProperty;
     this.serializedData = serializedData;
 
-    Error.captureStackTrace(this, this.constructor);
+    (Error as any).captureStackTrace(this, this.constructor);
   }
 }

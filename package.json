@@ -1,6 +1,6 @@
 {
   "name": "ts-serializer",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "A simple typescript serialization library.",
   "main": "dist/index.js",
   "scripts": {

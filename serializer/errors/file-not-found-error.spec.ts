@@ -27,11 +27,6 @@ describe('FileNotFoundError constructor', () => {
       expect(error.file).to.equal('/test/file');
     });
 
-    it('should set correct currentDir property', () => {
-      const error = new FileNotFoundError('/test/file');
-      expect(error.currentDir).to.equal(__dirname);
-    });
-
     it('should set correct stacktrace', () => {
       const error = new FileNotFoundError('/test/file');
       expect(error.stack).to.equal('ThisIsAStackTrace');

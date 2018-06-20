@@ -320,7 +320,11 @@ export class Serializer {
       for (const property in serializedData) {
         if (!newObject[newObjectClassName]['_serializable_nonserialized'].includes(property)) {
           if (serializedData[property] === undefined) {
-            newObject[property] = undefined;
+            continue;
+          }
+
+          if (serializedData[property] === null) {
+            newObject[property] = null;
             continue;
           }
 
@@ -413,7 +417,6 @@ export class Serializer {
 
           // Crate Dummy array
           const data = isArray ? object[property] : [object[property]];
-          // serializeDataTemp = isArray ? [] : undefined;
           const isComplexOrAbstractProperty = object[objectClassName]['_serializable_complextype'].get(property) ||
               object[objectClassName]['_serializable_abstracttype'].get(property);
           let serializeDataTemp: any = isArray ? [] : undefined;
