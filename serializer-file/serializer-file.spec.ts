@@ -7,8 +7,8 @@ import * as fs from 'fs-extra';
 import * as mockFS from 'mock-fs';
 import * as sinon from 'sinon';
 
-import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
-import {Serializable} from './serializable';
+import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './../serializer/errors';
+import {Serializable} from './../serializer/serializable';
 import {Serializer} from './serializer-file';
 
 chai.use(chaiAsPromised);

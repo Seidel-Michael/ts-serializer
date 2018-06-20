@@ -1,8 +1,8 @@
 import * as fs from 'fs-extra';
 
-import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './errors';
-import {Serializable} from './serializable';
-import {Serializer as SerializerJson} from './serializer';
+import {FileNotFoundError, FileParseError, FileReadError, FileWriteError} from './../serializer/errors';
+import {Serializable} from './../serializer/serializable';
+import {Serializer as SerializerJson} from './../serializer/serializer';
 
 /**
  * Provides serialization and deserialization methods.
