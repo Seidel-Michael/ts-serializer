@@ -16,7 +16,7 @@ To enable serialization for a type it has to implement the Serializable interfac
 
 ### Example
 ```ts
-import {Serializable} from './serializable';
+import {Serializable} from 'ts-serializer';
 
 class TestClass implements Serializable {
   testString: string;
@@ -60,7 +60,7 @@ You don't have to st the ArrayType decorator for simple type arrays.
 
 ### Example
 ```ts
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 @AddTypeImplementation('testTypeA', MyTypeA)
 @AddTypeImplementation('testTypeB', MyTypeB)
@@ -114,8 +114,8 @@ class TestClass implements Serializable {
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
@@ -139,6 +139,11 @@ Serializer.deserialize<TestClass>(TestClass, input).then((obj) => { JSON.stringi
 ```
 
 ### deserializeFile
+To be able to use the deserializeFile method you have to import the serializer-file.
+```ts
+import {Serializer} from 'ts-serializer/serializer-file';
+```
+
 ```ts
 /**
    * Deserializes a file from serialized data.
@@ -159,8 +164,8 @@ Serializer.deserialize<TestClass>(TestClass, input).then((obj) => { JSON.stringi
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer/serializer-file';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
@@ -203,8 +208,8 @@ Serializer.deserializeFile<TestClass>(TestClass, 'test.json').then((obj) => { JS
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
@@ -247,8 +252,8 @@ Serializer.deserializeProperty<string>(TestClass, input, 'testString').then((obj
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
@@ -291,8 +296,8 @@ Serializer.deserializeArrayItem<ComplexType>(TestClass, input, 'testArray').then
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 @AddTypeImplementation('testTypeA', MyTypeA)
 @AddTypeImplementation('testTypeB', MyTypeB)
@@ -308,6 +313,11 @@ Serializer.deserializeAbstract<MyAbstractType>(TestClass, input, 'type').then((o
 ```
 
 ### serialize
+To be able to use the deserializeFile method you have to import the serializer-file.
+```ts
+import {Serializer} from 'ts-serializer/serializer-file';
+```
+
 ```ts
 /**
    * Serializes the object to serialized data.
@@ -323,8 +333,8 @@ Serializer.deserializeAbstract<MyAbstractType>(TestClass, input, 'type').then((o
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer/serializer-file';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
@@ -365,8 +375,8 @@ Serializer.serialize<TestClass>(test).then((serializedObj) => { JSON.stringify(s
 
 #### Example
 ```ts
-import {Serializer} from './serializer';
-import {Serializable, Mandatory, NonSerialized} from './serializable';
+import {Serializer} from 'ts-serializer';
+import {Serializable, Mandatory, NonSerialized} from 'ts-serializer';
 
 class TestClass implements Serializable {
   @Mandatory
