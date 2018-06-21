@@ -196,6 +196,13 @@ export class Serializer {
 
       const typeClassName = `_serializable_${type.name}`;
 
+      // Plausibility checks
+      if(!type.prototype[typeClassName]['_serializable_array'].includes(propertyName))
+      {
+        reject(new ReferenceError(`The property ${propertyName} of type ${type.name} is not marked as an array type.`));
+        return;
+      }
+
       try {
         if (type.prototype[typeClassName]['_serializable_complextype'].get(propertyName)) {
           await this.deserialize(type.prototype[typeClassName]['_serializable_complextype'].get(propertyName), serializedData).then((obj) => {
@@ -205,6 +212,8 @@ export class Serializer {
           await this.getAbstractType(serializedData, propertyName, type.prototype[typeClassName]).then((obj) => {
             newObject = obj;
           });
+        }else {
+          throw new ReferenceError(`The property ${propertyName} of type ${type.name} is not marked as complex or abstract.`);
         }
       } catch (error) {
         reject(error);
@@ -405,8 +414,8 @@ export class Serializer {
    * @memberof Serializer
    */
   private static async serializeElement(element: any, serializedData: any, isArray: boolean, isComplexOrAbstractProperty: boolean): Promise<any> {
-    if (element === undefined) {
-      serializedData = undefined;
+    if (element === undefined || element === null) {
+      return isArray ? serializedData : element;
     } else if (isComplexOrAbstractProperty) {
       const obj = await this.serialize(element);
       isArray ? serializedData.push(obj) : serializedData = obj;

@@ -284,6 +284,31 @@ describe('Serializer', () => {
                  Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'abstractTypeArray'))
           .to.be.rejectedWith(SerializedObjectIncompleteError);
     });
+
+    it('should reject with ReferenceError if container type does not have the given property', async () => {
+      const testData = {};
+
+      return expect(
+                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'hello'))
+          .to.be.rejectedWith(ReferenceError);
+    });
+
+
+    it('should reject with ReferenceError if property is not abstract or complex', async () => {
+      const testData = {};
+
+      return expect(
+                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'simpleTypeArray'))
+          .to.be.rejectedWith(ReferenceError);
+    });
+
+    it('should reject with ReferenceError if property is not an array', async () => {
+      const testData = {};
+
+      return expect(
+                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassAbstractImplementation, testData, 'test'))
+          .to.be.rejectedWith(ReferenceError);
+    });
   });
 
   describe('deserialize', () => {
@@ -651,6 +676,24 @@ describe('Serializer', () => {
       return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
           .to.eventually.deep.equal(
               {simpleArray: ['a', 'b'], complexTypeArray: [{test: 'A'}, {test: 'B'}], abstractTypeArray: [{test: 'A'}, {test: 'B'}]});
+    });
+
+    it('should resolve with valid serialized array object with null object', () => {
+      const object = new TestClassArrayNoMandatoryNoExclude();
+      object.complexTypeArray = [null];
+
+      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
+          .to.eventually.deep.equal(
+              {complexTypeArray: []});
+    });
+
+    it('should resolve with valid serialized array object with undefined object', () => {
+      const object = new TestClassArrayNoMandatoryNoExclude();
+      object.complexTypeArray = [undefined];
+
+      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
+          .to.eventually.deep.equal(
+              {complexTypeArray: []});
     });
   });
 });
