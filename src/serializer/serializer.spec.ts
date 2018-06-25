@@ -638,6 +638,24 @@ describe('Serializer', () => {
       return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
           .to.eventually.deep.equal({test: 'IAmATest', complex: undefined});
     });
+    
+    it('should resolve with valid serialized complex object - null', () => {
+      const object = new TestClassNoMandatoryNoExcludeComplex();
+      object.test = 'IAmATest';
+      object.complex = null;
+
+      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', complex: null});
+    });
+
+    it('should resolve with valid serialized complex object - null deep', () => {
+      const object = new TestClassNoMandatoryNoExcludeComplex();
+      object.test = 'IAmATest';
+      object.complex.mandatoryProperty = null;
+
+      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
+          .to.eventually.deep.equal({test: 'IAmATest', complex: {mandatoryProperty: null, test: 'Test123'}});
+    });
 
     it('should resolve with valid serialized abstract object - exclude', () => {
       const object = new TestClassAbstractTypeNoMandatoryNoExclude();
