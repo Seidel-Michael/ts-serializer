@@ -4,10 +4,10 @@
     "module": "commonjs",
     "outDir": ".",
     "lib": [
-      "es2017",
-      "dom"
+      "es2017"
     ],
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "declaration": true,
   },
   "include": [
     "./src/**/*.ts"
