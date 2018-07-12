@@ -57,10 +57,20 @@ export function Mandatory(target: any, key: string): void {
  * @param {*} type The complex type.
  * @returns {(target: any, key: string) => void} The generated decorator.
  */
-export function ComplexType(type: any): (target: any, key: string) => void {
+
+
+/**
+ * This decorator marks the property as a complex type for deserialization.
+ * The type must be serializable itself.
+ *
+ * @export
+ * @param {*} type The complex type.
+ * @param {boolean} [update] If set to true the setting is updated if existing.
+ * @returns {(target: any, key: string) => void} The generated decorator.
+ */
+export function ComplexType(type: any, update?: boolean): (target: any, key: string) => void {
   return (target: any, key: string): void => {
-    if(type === undefined)
-    {
+    if (type === undefined) {
       throw new ReferenceError(`Invalid ComplexType definition of ${target.constructor.name}. Type can not be null.`);
     }
 
@@ -68,9 +78,13 @@ export function ComplexType(type: any): (target: any, key: string) => void {
       target[`_serializable_${target.constructor.name}`] = {};
     }
 
-    target[`_serializable_${target.constructor.name}`]['_serializable_complextype'] ?
-        target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].set(key, type) :
-        target[`_serializable_${target.constructor.name}`]['_serializable_complextype'] = new Map().set(key, type);
+    if (target[`_serializable_${target.constructor.name}`]['_serializable_complextype']) {
+      if (!target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get(key) || update) {
+        target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].set(key, type);
+      }
+    } else {
+      target[`_serializable_${target.constructor.name}`]['_serializable_complextype'] = new Map().set(key, type);
+    }
   };
 }
 
@@ -102,12 +116,12 @@ export function ArrayType(target: any, key: string): void {
  * @export
  * @param {string} typeName The name of the type.
  * @param {*} type The type.
- * @returns {(ctor: Function) => void}
+ * @param {boolean} [update] If set to true the setting is updated if existing.
+ * @returns {(ctor: Function) => void} The generated decorator.
  */
-export function AddTypeImplementation(typeName: string, type: any): (ctor: Function) => void {
+export function AddTypeImplementation(typeName: string, type: any, update?: boolean): (ctor: Function) => void {
   return (ctor: Function) => {
-    if(type === undefined)
-    {
+    if (type === undefined) {
       throw new ReferenceError(`Invalid AddTypeImplementation definition of ${typeName}. Type can not be null.`);
     }
 
@@ -115,9 +129,13 @@ export function AddTypeImplementation(typeName: string, type: any): (ctor: Funct
       ctor.prototype[`_serializable_${ctor.name}`] = {};
     }
 
-    ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'] ?
-        ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'].set(typeName, type) :
-        ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'] = new Map().set(typeName, type);
+    if (ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation']) {
+      if (!ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'].get(typeName) || update) {
+        ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'].set(typeName, type);
+      }
+    } else {
+      ctor.prototype[`_serializable_${ctor.name}`]['_serializable_typeimplementation'] = new Map().set(typeName, type);
+    }
   };
 }
 
@@ -127,16 +145,21 @@ export function AddTypeImplementation(typeName: string, type: any): (ctor: Funct
  *
  * @export
  * @param {*} typeProperty The property name in the serialized data with the type name information.
- * @returns {(target: any, key: string) => void}
+ * @param {boolean} [update] If set to true the setting is updated if existing.
+ * @returns {(target: any, key: string) => void} The generated decorator.
  */
-export function AbstractType(typeProperty: any): (target: any, key: string) => void {
+export function AbstractType(typeProperty: any, update?: boolean): (target: any, key: string) => void {
   return (target: any, key: string): void => {
     if (!target[`_serializable_${target.constructor.name}`]) {
       target[`_serializable_${target.constructor.name}`] = {};
     }
 
-    target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'] ?
-        target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].set(key, typeProperty) :
-        target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'] = new Map().set(key, typeProperty);
+    if (target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype']) {
+      if (!target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get(key) || update) {
+        target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].set(key, typeProperty);
+      }
+    } else {
+      target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'] = new Map().set(key, typeProperty);
+    }
   };
 }

@@ -92,6 +92,33 @@ describe('Serializable decorators', () => {
       expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].size).to.equal(2);
     });
 
+    it('should not update key in _serializable_complextype array on target object if update is not set.', () => {
+      const target = {};
+
+      ComplexType(String)(target, 'abc');
+      ComplexType(Number)(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('abc')).to.equal(String);
+    });
+
+    it('should not update key in _serializable_complextype array on target object if update is set to false.', () => {
+      const target = {};
+
+      ComplexType(String)(target, 'abc');
+      ComplexType(Number, false)(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('abc')).to.equal(String);
+    });
+
+    it('should update key in _serializable_complextype array on target object if update is set to true.', () => {
+      const target = {};
+
+      ComplexType(String)(target, 'abc');
+      ComplexType(Number, true)(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_complextype'].get('abc')).to.equal(Number);
+    });
+
     it('should throw ReferenceError if type is undefined', () => {
       const target = {};
 
@@ -153,6 +180,27 @@ describe('Serializable decorators', () => {
       expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].size).to.equal(2);
     });
 
+    it('should not update key in _serializable_typeimplementation array on prototype if update is not set.', () => {
+      AddTypeImplementation('abc', String)(Number);
+      AddTypeImplementation('abc', Number)(Number);
+
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].get('abc')).to.equal(String);
+    });
+
+    it('should not update key in _serializable_typeimplementation array on prototype if update is to false.', () => {
+      AddTypeImplementation('abc', String)(Number);
+      AddTypeImplementation('abc', Number, false)(Number);
+
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].get('abc')).to.equal(String);
+    });
+
+    it('should update key in _serializable_typeimplementation array on prototype if update is to true.', () => {
+      AddTypeImplementation('abc', String)(Number);
+      AddTypeImplementation('abc', Number, true)(Number);
+
+      expect(Number.prototype[`_serializable_${Number.name}`]['_serializable_typeimplementation'].get('abc')).to.equal(Number);
+    });
+
     it('should throw ReferenceError if type is undefined', () => {
       expect(() => {
         AddTypeImplementation('abc', undefined)(Number);
@@ -187,6 +235,33 @@ describe('Serializable decorators', () => {
       AbstractType('abc')(target, 'testA');
 
       expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].size).to.equal(2);
+    });
+
+    it('should not update key in _serializable_abstracttype array on target object if update is set to undefined.', () => {
+      const target = {};
+
+      AbstractType('A')(target, 'abc');
+      AbstractType('B')(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('abc')).to.equal('A');
+    });
+
+    it('should not update key in _serializable_abstracttype array on target object if update is set to false.', () => {
+      const target = {};
+
+      AbstractType('A')(target, 'abc');
+      AbstractType('B', false)(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('abc')).to.equal('A');
+    });
+
+    it('should update key in _serializable_abstracttype array on target object if update is set to true.', () => {
+      const target = {};
+
+      AbstractType('A')(target, 'abc');
+      AbstractType('B', true)(target, 'abc');
+
+      expect(target[`_serializable_${target.constructor.name}`]['_serializable_abstracttype'].get('abc')).to.equal('B');
     });
   });
 });
