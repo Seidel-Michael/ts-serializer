@@ -30,6 +30,7 @@ export class UnknownTypeDefinitionError extends Error {
    */
   constructor(unknownType: string, serializedData: any) {
     super(`The implementation of the abstract type ${unknownType} is not defined.`);
+    Object.setPrototypeOf(this, UnknownTypeDefinitionError.prototype);
 
     this.name = this.constructor.name;
     this.unknownType = unknownType;

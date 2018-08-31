@@ -39,6 +39,7 @@ export class SerializedObjectIncompleteError extends Error {
    */
   constructor(targetType: string, serializedData: any, missingProperty: string) {
     super(`The mandatory property ${missingProperty} of type ${targetType} could not be found in the serialized data.`);
+    Object.setPrototypeOf(this, SerializedObjectIncompleteError.prototype);
 
     this.name = this.constructor.name;
     this.missingProperty = missingProperty;

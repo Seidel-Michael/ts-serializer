@@ -22,7 +22,7 @@ class TestClassNoMandatoryNoExclude implements Serializable {
 }
 
 describe('Serializer', () => {
-   describe('deserializeFile', () => {
+  describe('deserializeFile', () => {
     let stub = null;
 
     afterEach(() => {

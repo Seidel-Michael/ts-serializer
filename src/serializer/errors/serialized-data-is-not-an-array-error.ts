@@ -30,6 +30,7 @@ export class SerializedDataIsNotAnArrayError extends Error {
    */
   constructor(invalidProperty: string, serializedData: any) {
     super(`The property ${invalidProperty} is not an array.`);
+    Object.setPrototypeOf(this, SerializedDataIsNotAnArrayError.prototype);
 
     this.name = this.constructor.name;
     this.invalidProperty = invalidProperty;

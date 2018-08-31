@@ -30,6 +30,7 @@ export class FileWriteError extends Error {
      */
     constructor(file: string, innerError: Error) {
       super(`The file ${file} could not be written.`);
+      Object.setPrototypeOf(this, FileWriteError.prototype);
   
       this.name = this.constructor.name;
       this.file = file;

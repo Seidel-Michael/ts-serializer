@@ -288,8 +288,7 @@ describe('Serializer', () => {
     it('should reject with ReferenceError if container type does not have the given property', async () => {
       const testData = {};
 
-      return expect(
-                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'hello'))
+      return expect(Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'hello'))
           .to.be.rejectedWith(ReferenceError);
     });
 
@@ -297,16 +296,14 @@ describe('Serializer', () => {
     it('should reject with ReferenceError if property is not abstract or complex', async () => {
       const testData = {};
 
-      return expect(
-                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'simpleTypeArray'))
+      return expect(Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassArrayNoMandatoryNoExclude, testData, 'simpleTypeArray'))
           .to.be.rejectedWith(ReferenceError);
     });
 
     it('should reject with ReferenceError if property is not an array', async () => {
       const testData = {};
 
-      return expect(
-                 Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassAbstractImplementation, testData, 'test'))
+      return expect(Serializer.deserializeArrayItem<TestClassAbstractImplementation>(TestClassAbstractImplementation, testData, 'test'))
           .to.be.rejectedWith(ReferenceError);
     });
   });
@@ -581,7 +578,7 @@ describe('Serializer', () => {
       objNew.test = 'NewTest';
       object.complexTypeArrayNew = [objNew];
 
-      return expect(Serializer.serialize<TestClassInheritanceNew>(object)).to.eventually.deep.equal({
+      return expect(Serializer.serialize<TestClassInheritanceNew>(object)).to.eventually.deep.include({
         mandatoryProperty: 'BaseMandatory',
         abstractType: {typeDef: 'testType'},
         complexTypeArray: [{test: 'BaseTest'}],
@@ -638,14 +635,13 @@ describe('Serializer', () => {
       return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
           .to.eventually.deep.equal({test: 'IAmATest', complex: undefined});
     });
-    
+
     it('should resolve with valid serialized complex object - null', () => {
       const object = new TestClassNoMandatoryNoExcludeComplex();
       object.test = 'IAmATest';
       object.complex = null;
 
-      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object))
-          .to.eventually.deep.equal({test: 'IAmATest', complex: null});
+      return expect(Serializer.serialize<TestClassNoMandatoryNoExcludeComplex>(object)).to.eventually.deep.equal({test: 'IAmATest', complex: null});
     });
 
     it('should resolve with valid serialized complex object - null deep', () => {
@@ -700,18 +696,14 @@ describe('Serializer', () => {
       const object = new TestClassArrayNoMandatoryNoExclude();
       object.complexTypeArray = [null];
 
-      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
-          .to.eventually.deep.equal(
-              {complexTypeArray: []});
+      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object)).to.eventually.deep.equal({complexTypeArray: []});
     });
 
     it('should resolve with valid serialized array object with undefined object', () => {
       const object = new TestClassArrayNoMandatoryNoExclude();
       object.complexTypeArray = [undefined];
 
-      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object))
-          .to.eventually.deep.equal(
-              {complexTypeArray: []});
+      return expect(Serializer.serialize<TestClassArrayNoMandatoryNoExclude>(object)).to.eventually.deep.equal({complexTypeArray: []});
     });
   });
 });

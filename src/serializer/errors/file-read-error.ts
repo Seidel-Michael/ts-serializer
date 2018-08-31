@@ -30,6 +30,7 @@ export class FileReadError extends Error {
    */
   constructor(file: string, innerError: Error) {
     super(`The file ${file} could not be read.`);
+    Object.setPrototypeOf(this, FileReadError.prototype);
 
     this.name = this.constructor.name;
     this.file = file;

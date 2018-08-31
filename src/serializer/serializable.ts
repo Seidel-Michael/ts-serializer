@@ -55,16 +55,6 @@ export function Mandatory(target: any, key: string): void {
  *
  * @export
  * @param {*} type The complex type.
- * @returns {(target: any, key: string) => void} The generated decorator.
- */
-
-
-/**
- * This decorator marks the property as a complex type for deserialization.
- * The type must be serializable itself.
- *
- * @export
- * @param {*} type The complex type.
  * @param {boolean} [update] If set to true the setting is updated if existing.
  * @returns {(target: any, key: string) => void} The generated decorator.
  */

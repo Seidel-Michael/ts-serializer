@@ -22,6 +22,7 @@ export class FileNotFoundError extends Error {
    */
   constructor(file: string) {
     super(`The file ${file} could not be found.`);
+    Object.setPrototypeOf(this, FileNotFoundError.prototype);
 
     this.name = this.constructor.name;
     this.file = file;

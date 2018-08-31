@@ -37,28 +37,47 @@ export class Serializer {
         }
 
         if (proto[protoName]['_serializable_array']) {
-          object[className]['_serializable_array'] =
-              _.union(object[className]['_serializable_array'], proto[protoName]['_serializable_array']);
+          object[className]['_serializable_array'] = _.union(object[className]['_serializable_array'], proto[protoName]['_serializable_array']);
         }
 
         if (proto[protoName]['_serializable_complextype']) {
           object[className]['_serializable_complextype'] =
-              new Map([...object[className]['_serializable_complextype'], ...proto[protoName]['_serializable_complextype']]);
+              this.combineMap(object[className]['_serializable_complextype'], proto[protoName]['_serializable_complextype']);
         }
 
         if (proto[protoName]['_serializable_abstracttype']) {
           object[className]['_serializable_abstracttype'] =
-              new Map([...object[className]['_serializable_abstracttype'], ...proto[protoName]['_serializable_abstracttype']]);
+              this.combineMap(object[className]['_serializable_abstracttype'], proto[protoName]['_serializable_abstracttype']);
         }
 
         if (proto[protoName]['_serializable_typeimplementation']) {
           object[className]['_serializable_typeimplementation'] =
-              new Map([...object[className]['_serializable_typeimplementation'], ...proto[protoName]['_serializable_typeimplementation']]);
+              this.combineMap(object[className]['_serializable_typeimplementation'], proto[protoName]['_serializable_typeimplementation']);
         }
       }
 
       proto = Object.getPrototypeOf(proto);
     }
+  }
+
+  /**
+   * Combines two Maps.
+   *
+   * @private
+   * @static
+   * @param {*} map1 The fist map.
+   * @param {*} map2 The second map.
+   * @returns The combined map.
+   * @memberof Serializer
+   */
+  private static combineMap(map1: any, map2: any): any {
+    const result = new Map(map1.entries());
+
+    map2.forEach((value, key) => {
+      result.set(key, value);
+    });
+
+    return result;
   }
 
   /**
@@ -197,8 +216,7 @@ export class Serializer {
       const typeClassName = `_serializable_${type.name}`;
 
       // Plausibility checks
-      if(!type.prototype[typeClassName]['_serializable_array'].includes(propertyName))
-      {
+      if (!type.prototype[typeClassName]['_serializable_array'].includes(propertyName)) {
         reject(new ReferenceError(`The property ${propertyName} of type ${type.name} is not marked as an array type.`));
         return;
       }
@@ -212,7 +230,7 @@ export class Serializer {
           await this.getAbstractType(serializedData, propertyName, type.prototype[typeClassName]).then((obj) => {
             newObject = obj;
           });
-        }else {
+        } else {
           throw new ReferenceError(`The property ${propertyName} of type ${type.name} is not marked as complex or abstract.`);
         }
       } catch (error) {

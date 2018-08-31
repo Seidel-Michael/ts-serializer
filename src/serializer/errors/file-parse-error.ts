@@ -30,6 +30,7 @@ export class FileParseError extends Error {
    */
   constructor(file: string, innerError: Error) {
     super(`The file ${file} could not be parsed.`);
+    Object.setPrototypeOf(this, FileParseError.prototype);
 
     this.name = this.constructor.name;
     this.file = file;
