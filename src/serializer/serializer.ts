@@ -264,7 +264,7 @@ export class Serializer {
 
       const typeClassName = `_serializable_${type.name}`;
 
-      if (!type.prototype[typeClassName]['_serializable_nonserialized'].includes(propertyName)) {
+      if (!type.prototype[typeClassName]['_serializable_nonserialized'].includes(propertyName) && serializedData[propertyName] !== null) {
         let data = serializedData[propertyName];
 
         if (data === undefined) {
