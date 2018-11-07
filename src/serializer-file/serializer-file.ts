@@ -28,13 +28,15 @@ export class Serializer extends SerializerJson {
    */
   static deserializeFile<T extends Serializable>(type: any, file: any): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-
       if (!fs.existsSync(file)) {
         reject(new FileNotFoundError(file));
         return;
       }
 
       fs.readJson(file)
+          .then((serializedData) => {
+            this.deserialize<T>(type, serializedData).then(resolve).catch(reject);
+          })
           .catch((error) => {
             if (error instanceof SyntaxError) {
               reject(new FileParseError(file, error));
@@ -43,9 +45,6 @@ export class Serializer extends SerializerJson {
 
             reject(new FileReadError(file, error));
             return;
-          })
-          .then((serializedData) => {
-            this.deserialize<T>(type, serializedData).then(resolve).catch(reject);
           });
     });
   }
@@ -64,19 +63,15 @@ export class Serializer extends SerializerJson {
   static serializeFile<T extends Serializable>(object: T, file: any): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       this.serialize(object).then((serializedData) => {
-
         fs.ensureFile(file)
+            .then(() => {
+              fs.writeJson(file, serializedData, {spaces: ' '}).then(resolve).catch((error) => {
+                reject(new FileWriteError(file, error));
+              });
+            })
             .catch((error) => {
               reject(new FileWriteError(file, error));
-            })
-            .then(() => {
-              fs.writeJson(file, serializedData, {spaces: ' '})
-                  .catch((error) => {
-                    reject(new FileWriteError(file, error));
-                  })
-                  .then(resolve);
             });
-
       });
     });
   }

@@ -4,7 +4,9 @@
   "description": "A simple typescript serialization library.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist/"],
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "start": "node index",
     "test": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --reporter spec --require ts-node/register --require source-map-support/register --full-trace '**/**/*.spec.ts'",

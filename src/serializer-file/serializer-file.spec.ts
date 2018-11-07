@@ -24,11 +24,17 @@ class TestClassNoMandatoryNoExclude implements Serializable {
 describe('Serializer', () => {
   describe('deserializeFile', () => {
     let stub = null;
+    let deserializeStub = null;
 
     afterEach(() => {
       if (stub) {
         stub.restore();
         stub = null;
+      }
+
+      if (deserializeStub) {
+        deserializeStub.restore();
+        deserializeStub = null;
       }
 
       mockFS.restore();
@@ -75,15 +81,38 @@ describe('Serializer', () => {
       return expect(Serializer.deserializeFile<TestClassNoMandatoryNoExclude>(TestClassNoMandatoryNoExclude, '/testFolder/testFile.json'))
           .to.eventually.include({test: 'cde'});
     });
+
+    it('should not call deserialize when fs.readJson rejects', async () => {
+      mockFS({
+        '/testFolder/testFile.json': mockFS.file({
+          content: JSON.stringify({test: 'cde'}),
+        }),
+      });
+
+      stub = sinon.stub(fs, 'readJson').rejects(Error);
+      deserializeStub = sinon.stub(Serializer, 'deserialize').resolves();
+
+      try {
+        await Serializer.deserializeFile<TestClassNoMandatoryNoExclude>(TestClassNoMandatoryNoExclude, '/testFolder/testFile.json');
+      } catch {
+        expect(deserializeStub.callCount).to.equal(0);
+      }
+    });
   });
 
   describe('serializeFile', () => {
-    let stub = null;
+    let stub1 = null;
+    let stub2 = null;
 
     afterEach(() => {
-      if (stub) {
-        stub.restore();
-        stub = null;
+      if (stub1) {
+        stub1.restore();
+        stub1 = null;
+      }
+
+      if (stub2) {
+        stub2.restore();
+        stub2 = null;
       }
 
       mockFS.restore();
@@ -116,7 +145,7 @@ describe('Serializer', () => {
     it('should reject with FileWriteError if an error ocurred while creating file or folder', () => {
       mockFS({});
 
-      stub = sinon.stub(fs, 'ensureFile').rejects(Error);
+      stub1 = sinon.stub(fs, 'ensureFile').rejects(Error);
 
       const testObject = new TestClassNoMandatoryNoExclude();
 
@@ -131,12 +160,31 @@ describe('Serializer', () => {
         }),
       });
 
-      stub = sinon.stub(fs, 'writeJson').rejects(Error);
+      stub1 = sinon.stub(fs, 'writeJson').rejects(Error);
 
       const testObject = new TestClassNoMandatoryNoExclude();
 
       return expect(Serializer.serializeFile<TestClassNoMandatoryNoExclude>(testObject, '/testFolder/testFile.json'))
           .to.be.rejectedWith(FileWriteError);
+    });
+
+    it('should not call writeJson when fs.ensureFile rejects', async () => {
+      mockFS({
+        '/testFolder/testFile.json': mockFS.file({
+          content: JSON.stringify({test: 'cde'}),
+        }),
+      });
+
+      stub1 = sinon.stub(fs, 'ensureFile').rejects(Error);
+      stub2 = sinon.stub(fs, 'writeJson').resolves();
+
+      const testObject = new TestClassNoMandatoryNoExclude();
+
+      try {
+        await Serializer.serializeFile<TestClassNoMandatoryNoExclude>(testObject, '/testFolder/testFile.json');
+      } catch {
+        expect(stub2.callCount).to.equal(0);
+      }
     });
   });
 });
