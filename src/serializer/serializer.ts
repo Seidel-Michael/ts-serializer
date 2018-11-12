@@ -135,7 +135,6 @@ export class Serializer {
    */
   private static async getAbstractType(serializedData: any, property: any, serializerArrays: any): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
-
       const typeName = serializedData[serializerArrays['_serializable_abstracttype'].get(property)];
 
       if (!typeName) {
@@ -169,7 +168,6 @@ export class Serializer {
    */
   static deserializeAbstract<T extends Serializable>(containerType: any, serializedData: any, typeProperty: string): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
-
       // Init empty arrays
       this.initEmptyArrays(containerType.prototype, containerType.name);
       this.copyInheritanceArrayContent(containerType.prototype, containerType.name);
@@ -304,6 +302,8 @@ export class Serializer {
         }
 
         resolve(newObject);
+      } else {
+        resolve(null);
       }
     });
   }
@@ -322,7 +322,6 @@ export class Serializer {
    */
   static deserialize<T extends Serializable>(type: any, serializedData: any): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
-
       // Init empty arrays
       this.initEmptyArrays(type.prototype, type.name);
       this.copyInheritanceArrayContent(type.prototype, type.name);
