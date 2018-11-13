@@ -50,8 +50,7 @@ class TestClassInheritanceBase implements Serializable {
 
   @NonSerialized excludedProperty: string;
 
-  @AbstractType('typeDef')
-  abstractType: any;
+  @AbstractType('typeDef') abstractType: any;
 
   @ComplexType(TestClassNoMandatoryNoExclude) @ArrayType complexTypeArray: TestClassNoMandatoryNoExclude[];
 
@@ -66,8 +65,7 @@ class TestClassInheritanceNew extends TestClassInheritanceBase implements Serial
 
   @NonSerialized excludedPropertyNew: string;
 
-  @AbstractType('typeDef')
-  abstractTypeNew: any;
+  @AbstractType('typeDef') abstractTypeNew: any;
 
   @ComplexType(TestClassNoMandatoryNoExclude) @ArrayType complexTypeArrayNew: TestClassNoMandatoryNoExclude[];
 
@@ -79,10 +77,10 @@ class TestClassInheritanceNew extends TestClassInheritanceBase implements Serial
 }
 
 
-@AddTypeImplementation('testType', TestClassAbstractImplementation) @AddTypeImplementation('testTypeB', TestClassMandatoryNoExclude)
+@AddTypeImplementation('testType', TestClassAbstractImplementation)
+@AddTypeImplementation('testTypeB', TestClassMandatoryNoExclude)
 class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
-  @AbstractType('typeDef')
-  abstractType: any;
+  @AbstractType('typeDef') abstractType: any;
 
   test: string;
 
@@ -93,7 +91,8 @@ class TestClassAbstractTypeNoMandatoryNoExclude implements Serializable {
   }
 }
 
-@AddTypeImplementation('testType', TestClassAbstractImplementation) @AddTypeImplementation('testTypeB', TestClassAbstractImplementation)
+@AddTypeImplementation('testType', TestClassAbstractImplementation)
+@AddTypeImplementation('testTypeB', TestClassAbstractImplementation)
 class TestClassArrayNoMandatoryNoExclude implements Serializable {
   @AbstractType('typeDef') @ArrayType abstractTypeArray: any[];
 
@@ -119,8 +118,7 @@ class TestClassMandatoryExclude implements Serializable {
 class TestClassNoMandatoryNoExcludeComplex implements Serializable {
   test: string;
 
-  @ComplexType(TestClassMandatoryExclude)
-  complex: TestClassMandatoryExclude;
+  @ComplexType(TestClassMandatoryExclude) complex: TestClassMandatoryExclude;
 
   constructor() {
     this.test = 'Test123';
@@ -254,6 +252,11 @@ describe('Serializer', () => {
       expect(result[1]).to.equal('testB');
     });
 
+    it('should set property to null when serialized data is null', async () => {
+      const testData = {test: null};
+
+      return expect(Serializer.deserializeProperty<string>(TestClassNoMandatoryNoExclude, testData, 'test')).to.eventually.be.null;
+    });
   });
 
   describe('deserializeArrayItem', () => {
@@ -527,7 +530,6 @@ describe('Serializer', () => {
 
       expect(result.simpleArray).to.equal(undefined);
     });
-
   });
 
   describe('deserializeAbstract', () => {
